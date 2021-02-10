@@ -1,0 +1,11 @@
+#jsons
+settings.json
+pacage-lock.json
+usersBackup.json
+
+#Folders:
+.old
+node_modules
+
+#Batch file
+run.bat
