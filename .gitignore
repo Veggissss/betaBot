@@ -3,6 +3,9 @@ settings.json
 pacage-lock.json
 usersBackup.json
 
+#uselsess js
+update.js
+
 #Folders:
 .old
 node_modules
