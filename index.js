@@ -12,6 +12,10 @@ const fs = require('fs');
 //Create discord client
 const discordClient = new Discord.Client();                         //{partials: ["MESSAGE","CHANNEL","REACTION","USER","GUILD_MEMBER"]}
 
+//Update bootime
+const dt = new Date();
+const bootTime = dt.getTime();
+
 //Global Variables
 const discordServerID = "451365873668849664";                       //Discord server ID
 const discordChannelID = "808649489307926529";                      //Channel where scoreboard should be posted
@@ -189,6 +193,12 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
                 }
                 else{
                     time = leaveTime - joinTime;
+                }
+
+                //Check if user join before bot started
+                if (joinTime - bootTime < 0){
+                    console.log(`${username} joined before bot started :P`);
+                    time = 0;
                 }
                 
                 console.log(`${entry.username} was in vc for ${time/1000}s\n`);

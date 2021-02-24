@@ -2,11 +2,11 @@
   {
     "userID": "277082056498872321",
     "username": "Veggissss",
-    "messages": 536,
-    "voiceTime": 30150214,
-    "voiceJoin": 1613759177245,
+    "messages": 564,
+    "voiceTime": 38264023,
+    "voiceJoin": 1614207317858,
     "afkJoin": 0,
-    "score": 2931
+    "score": 3139
   },
   {
     "userID": "474927613614227458",
@@ -21,10 +21,10 @@
     "userID": "266988063735939072",
     "username": "pls love me",
     "messages": 19,
-    "voiceTime": 42508225,
-    "voiceJoin": 1613934299821,
-    "afkJoin": 0,
-    "score": 449
+    "voiceTime": 43437644,
+    "voiceJoin": 1614101147890,
+    "afkJoin": 1614102077309,
+    "score": 457
   },
   {
     "userID": "191856675676749825",
@@ -38,11 +38,11 @@
   {
     "userID": "383977718913433600",
     "username": "Mats123",
-    "messages": 466,
-    "voiceTime": 17342152,
-    "voiceJoin": 1613244351991,
+    "messages": 468,
+    "voiceTime": 25440767,
+    "voiceJoin": 1614195092630,
     "afkJoin": 0,
-    "score": 2475
+    "score": 2552
   },
   {
     "userID": "224597825370062849",
@@ -56,38 +56,38 @@
   {
     "userID": "228944476062613504",
     "username": "Moku",
-    "messages": 167,
-    "voiceTime": 3308958,
-    "voiceJoin": 1613077615797,
+    "messages": 177,
+    "voiceTime": 11395423,
+    "voiceJoin": 1614195087297,
     "afkJoin": 0,
-    "score": 863
+    "score": 980
   },
   {
     "userID": "363378019928244244",
     "username": "Maestro",
-    "messages": 91,
-    "voiceTime": 104300656,
-    "voiceJoin": 1613933740058,
+    "messages": 95,
+    "voiceTime": 88150312,
+    "voiceJoin": 1614109367697,
     "afkJoin": 0,
-    "score": 1324
+    "score": 2269
   },
   {
     "userID": "247110375949074433",
     "username": "Flug3l",
     "messages": 38,
-    "voiceTime": 107673578,
-    "voiceJoin": 1613935767838,
+    "voiceTime": 94697345,
+    "voiceJoin": 1614101275047,
     "afkJoin": 0,
-    "score": 1087
+    "score": 2228
   },
   {
     "userID": "442051743300321281",
     "username": "ROBOT CHICKEN",
     "messages": 2,
-    "voiceTime": 13411689,
+    "voiceTime": 16411689,
     "voiceJoin": 1613419694750,
     "afkJoin": 0,
-    "score": 122
+    "score": 146
   },
   {
     "userID": "503829040587735040",
@@ -120,10 +120,10 @@
     "userID": "303823947298766848",
     "username": "pashaBisceps",
     "messages": 0,
-    "voiceTime": 14914741,
-    "voiceJoin": 1613755590502,
+    "voiceTime": 21758738,
+    "voiceJoin": 1614195882248,
     "afkJoin": 0,
-    "score": 124
+    "score": 181
   },
   {
     "userID": "196007801758285824",
@@ -137,11 +137,11 @@
   {
     "userID": "812848911260713011",
     "username": "MarkusHQ210",
-    "messages": 0,
-    "voiceTime": 12934808,
-    "voiceJoin": 1613946436371,
+    "messages": 4,
+    "voiceTime": 18284675,
+    "voiceJoin": 1613950008564,
     "afkJoin": 0,
-    "score": 108
+    "score": 172
   },
   {
     "userID": "449266276397744130",
@@ -160,5 +160,14 @@
     "voiceJoin": 1613943162492,
     "afkJoin": 0,
     "score": 26
+  },
+  {
+    "userID": "602472970757210128",
+    "username": "Lailalockert",
+    "messages": 0,
+    "voiceTime": 1400276,
+    "voiceJoin": 0,
+    "afkJoin": 0,
+    "score": 12
   }
 ]
