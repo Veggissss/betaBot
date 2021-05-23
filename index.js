@@ -30,12 +30,12 @@ discordClient.on('ready', () => {
 //Messages:
 discordClient.on('message', (message) => {
   if(!message.author.bot){
-    //console.log(message.content);
 
-    //Ignore DMs
+    //DMs
     if (message.channel.type == "dm"){
+        console.log(message.content);
         //From autor, manual leave
-        if (message.author.id == "277082056498872321"){
+        if (message.author.id == "277082056498872321" && message.content.length == 18){
             var date = new Date();
             var leaveTime = date.getTime();
 
@@ -83,6 +83,9 @@ discordClient.on('message', (message) => {
 
                     //Update leaderboard embed
                     embed.sendEmbed(discordClient, discordServerID, discordChannelID);
+
+                    //Update last user activity embed
+                    embed.editUserEmbed(entry);
                 }
                 else{
                     console.log(`Found no user: ${message.content}!`);
@@ -121,6 +124,9 @@ discordClient.on('message', (message) => {
 
             //Update leaderboard embed
             embed.sendEmbed(discordClient, discordServerID, discordChannelID);
+
+            //Update last user activity embed
+            embed.editUserEmbed(entry);
         }
         else{
             // Defining new user 
@@ -139,6 +145,9 @@ discordClient.on('message', (message) => {
 
             //Update leaderboard embed
             embed.sendEmbed(discordClient, discordServerID, discordChannelID);
+
+            //Update last user activity embed
+            embed.editUserEmbed(entry);
         }
     })
   }
@@ -265,8 +274,11 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
                 //Update leaderboard embed
                 embed.sendEmbed(discordClient, discordServerID, discordChannelID);
 
+                //Update last user activity embed
+                embed.editUserEmbed(entry);
+
             } else {
-                console.log("User not found.");
+                console.log(`User not found in list: ${oldMember.member.id}`);
             }
         })
     } 
@@ -299,7 +311,9 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
 
                     fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
                 }
-                else{console.log("User not found.");}
+                else{
+                    console.log(`User not found, ID: ${oldMember.member.id}`);
+                }
             })
         }
     }
@@ -316,6 +330,8 @@ function searchID(users, id){
     //console.log("User not Found :P");
     return null;
 }
+
+
 
 
 //Login to the discord API
