@@ -1,5 +1,4 @@
 //Author Veggissss
-//StatBot started 08.02.2021
 //Calculates time spent in vc and the amount messages sendt per user
 
 //Import local files
@@ -27,75 +26,85 @@ discordClient.on('ready', () => {
   discordClient.user.setActivity("with fire!", {type: "PLAYING"});  //LISTENING //PLAYING
 })
 
+
 //Messages:
 discordClient.on('message', (message) => {
   if(!message.author.bot){
-
     //DMs
     if (message.channel.type == "dm"){
         console.log(message.content);
         //From autor, manual leave
-        if (message.author.id == "277082056498872321" && message.content.length == 18){
+        if (message.author.id == "277082056498872321" && message.content.startsWith("stop")){
             var date = new Date();
             var leaveTime = date.getTime();
 
-            // Read users.json file 
-            fs.readFile("users.json", function(err, data) { 
-                if (err) throw err; 
-            
-                // Converting to JSON array
-                const users = JSON.parse(data); 
+            const guild = discordClient.guilds.cache.get(discordServerID);
+            const channels = guild.channels.cache.filter(c => c.type === 'voice');
 
-                //See if userID is in json
-                let n = searchID(users, message.content);
-
-                //console.log(userFound,n);
-                if (n){
-                    var entry = users[n];
-
-                    joinTime = entry.voiceJoin;
-                    afkTime = entry.afkJoin;
-
-                    if (afkTime != 0){
-                        time = afkTime - joinTime;
-                    }
-                    else{
-                        time = leaveTime - joinTime;
-                    }
-
-                    //Check if user join before bot started
-                    if (joinTime - bootTime < 0){
-                        console.log(`${entry.username} joined before bot started :P`);
-                        time = 0;
-                    }
+            for (const [channelID, channel] of channels) {
+                for (const [memberID, member] of channel.members) {
+                    /*member.setVoiceChannel('497910775512563742') //(id / null for disconnect)
+                    .then(() => console.log(`Moved ${member.user.tag}.`))
+                    .catch(console.error);*/
+                    // Read users.json file 
+                    fs.readFile("users.json", function(err, data) { 
+                        if (err) throw err; 
                     
-                    console.log(`${entry.username} was in vc for ${time/1000}s\n`);
+                        // Converting to JSON array
+                        const users = JSON.parse(data); 
 
-                    entry.voiceTime += time;
+                        //See if userID is in json
+                        let n = searchID(users, memberID);
 
-                    //5 points for message, 30 points per hour in vc
-                    let calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)))
-                    let newScore = Math.round(calculation)
-                    
-                    entry.score = newScore;
+                        //console.log(userFound,n);
+                        if (n){
+                            joinTime = users[n].voiceJoin;
+                            afkTime = users[n].afkJoin;
 
-                    fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
+                            if (afkTime != 0){
+                                time = afkTime - joinTime;
+                            }
+                            else{
+                                time = leaveTime - joinTime;
+                            }
 
-                    //Update leaderboard embed
-                    embed.sendEmbed(discordClient, discordServerID, discordChannelID);
+                            //Check if user join before bot started
+                            if (joinTime - bootTime < 0){
+                                console.log(`${users[n].username} joined before bot started :P`);
+                                time = 0;
+                            }
+                            
+                            console.log(`${users[n].username} was in vc for ${time/1000}s\n`);
 
-                    //Update last user activity embed
-                    embed.editUserEmbed(entry);
+                            users[n].voiceTime += time;
+
+                            //5 points for message, 30 points per hour in vc
+                            let calculation = (5 * users[n].messages + (30*(users[n].voiceTime /1000/60/60)))
+                            let newScore = Math.round(calculation)
+                            
+                            users[n].score = newScore;
+                                            
+                            //Update last user activity embed
+                            embed.editUserEmbed(users[n]);
+
+                            fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
+                        }
+                        else{
+                            console.log(`Found no user: ${memberID}!`);
+                        }
+                    })
                 }
-                else{
-                    console.log(`Found no user: ${message.content}!`);
-                }
-            })
+            }
+            //Update leaderboard embed
+            embed.sendEmbed(discordClient, discordServerID, discordChannelID);
+
+            //Quit
+            stop();
         }
-
         return;
     }
 
+    //NOT DM
     // Read users.json file 
     fs.readFile("users.json", function(err, data) { 
         
@@ -113,8 +122,8 @@ discordClient.on('message', (message) => {
             entry.messages += 1;
 
             //5 points for message, 30 points per hour in vc
-            var calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)))
-            var newScore = Math.round(calculation)
+            var calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)));
+            var newScore = Math.round(calculation);
             
             entry.score = newScore;
 
@@ -133,11 +142,11 @@ discordClient.on('message', (message) => {
             let user = { 
                 userID:    message.member.id,
                 username:  message.member.user.username,
-                messages:   0,
+                messages:   1,
                 voiceTime:  0,
                 voiceJoin:  0,
                 afkJoin: 0,
-                score: 0
+                score: 5
             }; 
             //Add new user to json
             users.push(user);
@@ -180,8 +189,6 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
 
         // Read users.json file 
         fs.readFile("users.json", function(err, data) { 
-            
-            // Check for errors 
             if (err) throw err; 
         
             // Converting to JSON 
@@ -287,8 +294,10 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
     else {
         console.log(`${username} switched channels!`);
 
-        if (afkChannels.includes(oldMember.channelID) || (afkChannels.includes(newMember.channelID))){
+        if ((afkChannels.includes(newVoice))){
             console.log(`${oldMember.member.displayName} is afk`);
+
+            //Write time to user
 
             // Read users.json file 
             fs.readFile("users.json", function(err, data) { 
@@ -316,6 +325,11 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
                 }
             })
         }
+        else if (afkChannels.includes(oldVoice)){
+            console.log(`${oldMember.member.displayName} is no longer afk`);
+
+            //start time user
+        }
     }
 })
 
@@ -331,8 +345,16 @@ function searchID(users, id){
     return null;
 }
 
+//Stop the bot and logout from discord api
+function stop(){
+    console.log(`Logging out: ${discordClient.user.tag}!\n`)
+    discordClient.user.setActivity("with fireworks!", {type: "PLAYING"});  //LISTENING //PLAYING
 
+    //Destoy client after 5 sec
+    const timer = ms => new Promise( res => setTimeout(res, ms));
+    timer(5000).then( _ => discordClient.destroy() );
+}
 
 
 //Login to the discord API
-discordClient.login(config.discord_token)
+discordClient.login(config.discord_token);

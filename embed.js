@@ -19,7 +19,7 @@ function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
     //Update global variables
     guild = discordClient.guilds.cache.get(GuildID);
     statsChannel = discordClient.channels.cache.get(ChannelID);
-    serverIcon = guild.iconURL({ format: 'gif', dynamic: true, size: 256 });
+    serverIcon = guild.iconURL({ dynamic: true, size: 256 });
 
     // Read users.json file 
     fs.readFile("users.json", function(err, data) { 
@@ -89,23 +89,21 @@ function leaderboardEmbed(users, iteration){
         userScore+= `\`${score}\`\n`;
 
         //Role rewards (delta,mafia,trusted,foregeiner) + DJ
-        switch(score){
-            case 10000:
-                var rank = rank_delta;
-                break;
-            case 5000:
-                var rank = rank_mafia;
-                break;
-            case 2000:
-                var rank = rank_trusted;
-                break;
-            case 500:
-                var rank = rank_foreigners;
-                break;
-            default:
-                var rank = rank_dj;
-                break;
+        var rank = rank_dj;
+        
+        if (score >= 10000){
+            rank = rank_delta;
         }
+        else if (score >= 5000){
+            rank = rank_mafia;
+        }
+        else if (score >= 2000){
+            rank = rank_trusted;
+        }
+        else if (score >= 500){
+            rank = rank_foreigners;
+        }
+
         let role = guild.roles.cache.find(role => role.id === rank);
 
         //console.log(`Gave rank ${role.name} to ${users[i].username}`);
@@ -135,6 +133,7 @@ function leaderboardEmbed(users, iteration){
     editEmbed(leaderboard, iteration);
 }
 
+//Smal embed that shows a user's stats
 function editUserEmbed(user){
     var voiceMins= user.voiceTime/1000/60;
     var voiceHour= Math.round((voiceMins/60)*10)/10;
@@ -145,9 +144,9 @@ function editUserEmbed(user){
         .setColor(getRandomColor()) //.setColor(0x51267)
         .setThumbnail(member.user.avatarURL({ dynamic: true }))
         .addFields(
-            { name: 'Hours',    value: voiceHour,   inline: true },
-            { name: 'Messages', value: user.messages, inline: true },
-            { name: 'Score',    value: user.score,   inline: true })
+            { name: 'Hours',    value: `\`${voiceHour}\``,   inline: true },
+            { name: 'Messages', value: `\`${user.messages}\``, inline: true },
+            { name: 'Score',    value: `\`${user.score}\``,   inline: true })
         .setFooter('Shows last active user')
         .setTimestamp();
 
