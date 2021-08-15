@@ -1,7 +1,7 @@
 {
   "name": "betabot",
   "version": "0.3.1",
-  "description": "A sample Node.js app using Express 4",
+  "description": "Statbot for the narkos server",
   "engines": {
     "node": "14.x"
   },
@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "ejs": "^3.1.5",
-    "express": "^4.15.2"
+    "express": "^4.17.1"
   },
   "devDependencies": {
     "got": "^11.3.0",
@@ -21,7 +21,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/heroku/node-js-getting-started.git"
+    "url": "git+https://github.com/Veggissss/betaBot"
   },
   "keywords": [
     "node",
@@ -30,8 +30,8 @@
   ],
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/heroku/node-js-getting-started/issues"
+    "url": "https://github.com/Veggissss/betaBot"
   },
-  "homepage": "https://github.com/heroku/node-js-getting-started#readme",
+  "homepage": "https://github.com/Veggissss/betaBot",
   "author": "Veggissss"
 }
