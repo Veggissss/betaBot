@@ -15,3 +15,5 @@ run.bat
 
 #Log file
 latest.Log
+
+.env

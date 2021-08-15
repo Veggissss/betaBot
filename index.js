@@ -1,12 +1,15 @@
 //Author Veggissss
 //Calculates time spent in vc and the amount messages sendt per user
+require('dotenv').config();
 
 //Import local
 const token = process.env.TOKEN;
 const embed  = require('./embed.js');
-
-const Discord = require('discord.js');                              //Remember you need "npm i opusscript" to play sounds!
+       
 const fs = require('fs');
+const Discord = require('discord.js');       //Remember you need "npm i opusscript" to play sounds!
+
+console.log(token);
 
 //Create discord client
 const discordClient = new Discord.Client();                         //{partials: ["MESSAGE","CHANNEL","REACTION","USER","GUILD_MEMBER"]}
