@@ -23,7 +23,7 @@ const afkChannels = ["451371568577249281","808276679389610005"];    //Channels t
 //discord startup:
 discordClient.on('ready', () => {
   console.log(`Logged in as ${discordClient.user.tag}!\n`)
-  discordClient.user.setActivity("with fire!", {type: "PLAYING"});  //LISTENING //PLAYING
+  discordClient.user.setActivity("To User Activity", {type: "LISTENING"});  //LISTENING //PLAYING
 })
 
 
@@ -33,6 +33,10 @@ discordClient.on('message', (message) => {
     //DMs
     if (message.channel.type == "dm"){
         console.log(message.content);
+
+        //Update leaderboard embed
+        embed.sendEmbed(discordClient, discordServerID, discordChannelID);
+
         //From autor, manual leave
         if (message.author.id == "277082056498872321" && message.content.startsWith("stop")){
             var date = new Date();
@@ -59,15 +63,8 @@ discordClient.on('message', (message) => {
                         //console.log(userFound,n);
                         if (n){
                             joinTime = users[n].voiceJoin;
-                            afkTime = users[n].afkJoin;
-
-                            if (afkTime != 0){
-                                time = afkTime - joinTime;
-                            }
-                            else{
-                                time = leaveTime - joinTime;
-                            }
-
+                            time = leaveTime - joinTime;
+                           
                             //Check if user join before bot started
                             if (joinTime - bootTime < 0){
                                 console.log(`${users[n].username} joined before bot started :P`);
@@ -77,13 +74,8 @@ discordClient.on('message', (message) => {
                             console.log(`${users[n].username} was in vc for ${time/1000}s\n`);
 
                             users[n].voiceTime += time;
-
-                            //5 points for message, 30 points per hour in vc
-                            let calculation = (5 * users[n].messages + (30*(users[n].voiceTime /1000/60/60)))
-                            let newScore = Math.round(calculation)
+                            users[n].score = calculateScore(users[n]);
                             
-                            users[n].score = newScore;
-                                            
                             //Update last user activity embed
                             embed.editUserEmbed(users[n]);
 
@@ -118,16 +110,10 @@ discordClient.on('message', (message) => {
 
         //console.log(userFound,n);
         if (n){
-            var entry = users[n];
-            entry.messages += 1;
+            users[n].messages += 1;
+            users[n].score = calculateScore(users[n]);
 
-            //5 points for message, 30 points per hour in vc
-            var calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)));
-            var newScore = Math.round(calculation);
-            
-            entry.score = newScore;
-
-            console.log(`${message.author.username} has sent ${entry.messages} messages`);
+            console.log(`${message.author.username} has sent ${users[n].messages} messages`);
 
             fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err;  });
 
@@ -135,28 +121,27 @@ discordClient.on('message', (message) => {
             embed.sendEmbed(discordClient, discordServerID, discordChannelID);
 
             //Update last user activity embed
-            embed.editUserEmbed(entry);
+            embed.editUserEmbed(users[n]);
         }
         else{
             // Defining new user 
-            let user = { 
+            let userEntry = { 
                 userID:    message.member.id,
                 username:  message.member.user.username,
                 messages:   1,
                 voiceTime:  0,
                 voiceJoin:  0,
-                afkJoin: 0,
                 score: 5
             }; 
             //Add new user to json
-            users.push(user);
+            users.push(userEntry);
             fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
 
             //Update leaderboard embed
             embed.sendEmbed(discordClient, discordServerID, discordChannelID);
 
             //Update last user activity embed
-            embed.editUserEmbed(entry);
+            embed.editUserEmbed(userEntry);
         }
     })
   }
@@ -193,38 +178,32 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
         
             // Converting to JSON 
             const users = JSON.parse(data); 
-
             let n = searchID(users, oldMember.member.id);
 
             //console.log(userFound,n);
             if (n){
-                var entry = users[n];
-
                 //If channel is afk no points is given
-                if (afkChannels.includes(oldMember.channelID) || (afkChannels.includes(newMember.channelID))){
-                    entry.afkJoin = joinTime;
+                if (afkChannels.includes(newVoice)){
+                    users[n].voiceJoin = 0;
                 }
                 else{
-                    entry.afkJoin = 0;
+                    users[n].voiceJoin = joinTime;
                 }
-
-                entry.voiceJoin = joinTime;
 
                 fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err;  });
             }else{
                 // Defining new user 
-                let user = { 
+                let userEntry = { 
                     userID:    oldMember.member.id,
                     username:  oldMember.member.user.username,
                     messages:   0,
                     voiceTime:  0,
                     voiceJoin:  joinTime,
-                    afkJoin: 0,
                     score: 0
                 }; 
 
                 //Add new user to json
-                users.push(user);
+                users.push(userEntry);
                 fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
             }
         }); 
@@ -232,9 +211,6 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
     //User leaves
     }else if (newVoice == null) {
         console.log(`${username} left!\n`);
-
-        var date = new Date();
-        var leaveTime = date.getTime();
 
         // Read users.json file 
         fs.readFile("users.json", function(err, data) { 
@@ -248,13 +224,17 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
 
             //console.log(userFound,n);
             if (n){
-                var entry = users[n];
+                let user = users[n];
+                let time;
 
-                joinTime = entry.voiceJoin;
-                afkTime = entry.afkJoin;
+                var date = new Date();
+                var leaveTime = date.getTime();
+                var joinTime = user.voiceJoin;
 
-                if (afkTime != 0){
-                    time = afkTime - joinTime;
+                //See if user left a afk channel
+                if (afkChannels.includes(oldVoice)){
+                    console.log(`${username} left an afk channel`);
+                    time = 0;
                 }
                 else{
                     time = leaveTime - joinTime;
@@ -262,27 +242,23 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
 
                 //Check if user join before bot started
                 if (joinTime - bootTime < 0){
-                    console.log(`${username} joined before bot started :P`);
+                    console.log(`${username} joined before bot started!`);
                     time = 0;
                 }
                 
-                console.log(`${entry.username} was in vc for ${time/1000}s\n`);
+                console.log(`${user.username} was in vc for ${time/1000}s\n`);
 
-                entry.voiceTime += time;
-
-                //5 points for message, 30 points per hour in vc
-                let calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)))
-                let newScore = Math.round(calculation)
-                
-                entry.score = newScore;
-
+                //Credit user
+                user.voiceTime += time;
+                user.score = calculateScore(user);
+           
                 fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
 
                 //Update leaderboard embed
                 embed.sendEmbed(discordClient, discordServerID, discordChannelID);
 
                 //Update last user activity embed
-                embed.editUserEmbed(entry);
+                embed.editUserEmbed(user);
 
             } else {
                 console.log(`User not found in list: ${oldMember.member.id}`);
@@ -311,12 +287,27 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
 
                 //console.log(userFound,n);
                 if (n){
-                    var entry = users[n];
+                    let user = users[n];
 
                     var date = new Date();
-                    var afkTime = date.getTime();
+                    var leaveTime = date.getTime();
+                    var joinTime = users[n].voiceJoin;
 
-                    entry.afkJoin = afkTime;
+                    let time = leaveTime - joinTime;
+
+                    //Check if user join before bot started
+                    if (joinTime - bootTime < 0){
+                        console.log(`${username} joined before bot started!`);
+                        time = 0;
+                    }
+                    
+                    console.log(`${user.username} was in vc for ${time/1000}s\n`);
+
+                    //Credit user
+                    user.voiceTime += time;
+                    user.score = calculateScore(user);
+        
+                    user.voiceJoin = 0;
 
                     fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
                 }
@@ -329,9 +320,39 @@ discordClient.on("voiceStateUpdate", (oldMember, newMember)=> {
             console.log(`${oldMember.member.displayName} is no longer afk`);
 
             //start time user
+
+            // Read users.json file 
+            fs.readFile("users.json", function(err, data) { 
+                if (err) throw err; 
+            
+                // Converting to JSON 
+                const users = JSON.parse(data); 
+
+                //See if userID is in json
+                let n = searchID(users, oldMember.member.id);
+
+                //console.log(userFound,n);
+                if (n){
+                    var date = new Date();
+                    var joinTime = date.getTime();
+            
+                    users[n].voiceJoin = joinTime;
+
+                    fs.writeFileSync("users.json", JSON.stringify(users,null,2), err => { if (err) throw err; });
+                }
+                else{
+                    console.log(`User could not be found ID: ${oldMember.member.id}`);
+                }
+            })
         }
     }
 })
+
+function calculateScore(entry){
+    //5 points for message, 30 points per hour in vc
+    let calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)));
+    return Math.round(calculation);
+}
 
 //Find user by id, if not found then = null
 function searchID(users, id){
@@ -348,7 +369,7 @@ function searchID(users, id){
 //Stop the bot and logout from discord api
 function stop(){
     console.log(`Logging out: ${discordClient.user.tag}!\n`)
-    discordClient.user.setActivity("with fireworks!", {type: "PLAYING"});  //LISTENING //PLAYING
+    discordClient.user.setActivity("with stats!", {type: "PLAYING"});  //LISTENING //PLAYING
 
     //Destoy client after 5 sec
     const timer = ms => new Promise( res => setTimeout(res, ms));

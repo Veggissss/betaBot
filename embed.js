@@ -148,7 +148,7 @@ function editUserEmbed(user){
             { name: 'Messages', value: `\`${user.messages}\``, inline: true },
             { name: 'Score',    value: `\`${user.score}\``,   inline: true })
         .setFooter('Shows last active user')
-        .setTimestamp();
+        .setTimestamp(member.user.createdAt);
 
         //-1 is reseved for userCards
         editEmbed(userCard, -1);
