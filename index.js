@@ -1,8 +1,8 @@
 //Author Veggissss
 //Calculates time spent in vc and the amount messages sendt per user
 
-//Import local files
-const config = require('./settings.json');
+//Import local
+const token = process.env.TOKEN;
 const embed  = require('./embed.js');
 
 const Discord = require('discord.js');                              //Remember you need "npm i opusscript" to play sounds!
@@ -378,4 +378,4 @@ function stop(){
 
 
 //Login to the discord API
-discordClient.login(config.discord_token);
+discordClient.login(token);
