@@ -2,6 +2,11 @@
 //Calculates time spent in vc and the amount messages sendt per user
 require('dotenv').config();
 
+const express = require('express');
+const PORT = process.env.PORT || 5000;
+
+express().listen(PORT, () => console.log(`Listening on ${ PORT }`));
+
 //Import local
 const token = process.env.TOKEN;
 const embed  = require('./embed.js');
