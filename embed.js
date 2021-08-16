@@ -1,4 +1,5 @@
 const Discord = require('discord.js')
+const { MongoClient } = require('mongodb')
 const fs = require('fs');
 
 //Rank ids:
@@ -13,6 +14,13 @@ let guild = null;
 let statsChannel = null;
 let serverIcon = null;
 
+//Mongodb
+const dbPass = process.env.MONGOPASS;
+
+const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+
 //Sends and updates leaderboard and gives out ranks
 function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
     
@@ -21,53 +29,66 @@ function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
     statsChannel = discordClient.channels.cache.get(ChannelID);
     serverIcon = guild.iconURL({ dynamic: true, size: 256 });
 
-    // Read users.json file 
-    fs.readFile("users.json", function(err, data) { 
-            
-        // Check for errors 
-        if (err) throw err; 
-    
-        // Converting to JSON obj
-        const users = JSON.parse(data); 
+    dbClient.connect(err => {
+        if (err) throw err;
 
-        //Sort by score
-        users.sort(getSortOrder("score"));
-
-        //Give top user rank
-        const topData = fs.readFileSync("top.json"); 
-        const topRank = JSON.parse(topData);
-
-        if (topRank.userID != users[0].userID){
-            let role = guild.roles.cache.find(role => role.id === "711141574964412416");
-
-            removeRole(topRank.userID,role);
-            giveRole(users[0].userID,role);
-            console.log(`Removed toprank from ${topRank.username} and gave it to ${users[0].username}`);
-
-            fs.writeFileSync("top.json", JSON.stringify(users[0], null, 2), err => { if (err) throw err; });
-        }
+        const collection = dbClient.db("Narkos").collection("Users");
         
-        //User embeds slit up to 50
-        let i = 0;
-        while(users.length > 0){
-            i++;
-            leaderboardEmbed(users, i);
-            //Remove 50
-            users.splice(0,50);
-        }
+        collection.find().sort({score: -1}).toArray().then(users => {
+            const userTop = users[0];
 
-        //Send rewards embed
-        const rewards = new Discord.MessageEmbed()
-        .setAuthor(`Rewards for Narkos`)
-        .setColor(getRandomColor())
-        .setThumbnail(serverIcon)
-        .addFields(
-            { name: 'Reward',           value: `<@&${"711141574964412416"}>\n<@&${rank_delta}>\n<@&${rank_mafia}>\n<@&${rank_trusted}>\n<@&${rank_foreigners}>\n<@&${rank_dj}>`, inline: true },
-            { name: 'Required Score',   value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
-        .setFooter('Updates when user leaves vc!');
+            //See if we got a new top rank
+            dbClient.db("Narkos").collection("Top").find().toArray().then(top => {
+                //console.log(top);
+                if (top[0].userID != userTop.userID){
+                    let role = guild.roles.cache.find(role => role.id === "711141574964412416");
 
-        //Index 0 is rewards
-        editEmbed(rewards, 0);
+                    removeRole(top[0].userID,role);
+                    giveRole(userTop.userID,role);
+                    console.log(`Removed toprank from ${top[0].username} and gave it to ${userTop.username}`);
+
+                    //Write to db
+                    var newValues = { $set: { 
+                        userID:    userTop.userID,
+                        username:  userTop.username,
+                        messages:   userTop.messages,
+                        voiceTime:  userTop.voiceTime,
+                        voiceJoin:  userTop.voiceJoin,
+                        score: userTop.score
+                    }  };
+
+                    dbClient.db("Narkos").collection("Top").updateOne({userID: top[0].userID}, newValues, function(err, res) {
+                        if (err) throw err;
+                        dbClient.close();
+                    })
+                }
+                else{
+                    dbClient.close();
+                }
+            });
+            
+            //User embeds slit up to 50
+            let i = 0;
+            while(users.length > 0){
+                i++;
+                leaderboardEmbed(users, i);
+                //Remove 50
+                users.splice(0,50);
+            }
+
+            //Send rewards embed
+            const rewards = new Discord.MessageEmbed()
+            .setAuthor(`Rewards for Narkos`)
+            .setColor(getRandomColor())
+            .setThumbnail(serverIcon)
+            .addFields(
+                { name: 'Reward',           value: `<@&${"711141574964412416"}>\n<@&${rank_delta}>\n<@&${rank_mafia}>\n<@&${rank_trusted}>\n<@&${rank_foreigners}>\n<@&${rank_dj}>`, inline: true },
+                { name: 'Required Score',   value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
+            .setFooter('Updates when user leaves vc!');
+
+            //Index 0 is rewards
+            editEmbed(rewards, 0);
+        });
     })
 }
 
@@ -251,7 +272,7 @@ async function getMember(userID){
     try {
         return await guild.members.fetch(userID);
     } catch (error) {
-        console.log(`Member not found: ${userID}`);
+        //console.log(`Member not found: ${userID}`);
         return null;
     }
 }
