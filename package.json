@@ -1,28 +1,21 @@
 {
   "name": "betabot",
-  "version": "0.3.1",
+  "version": "2.0.1",
   "description": "Statbot for the narkos server",
   "engines": {
-    "node": "14.x",
-    "npm": "6.14.9"
+    "node": "16.8.0",
+    "npm": "7.21.0"
   },
   "main": "index.js",
   "scripts": {
     "start": "node index.js",
-    "test": "node test.js"
+    "test": "node index.js"
   },
   "dependencies": {
     "dotenv": "^10.0.0",
-    "ejs": "^3.1.5",
-    "express": "^4.17.1",
-    "discord.js": "12.5.1",
-    "mongodb": "4.1.0"
-  },
-  "devDependencies": {
-    "got": "^11.3.0",
-    "discord.js": "12.5.1",
-    "dotenv": "^10.0.0",
-    "mongodb": "4.1.0"
+    "@discordjs/rest": "^0.1.0-canary.0",
+    "discord.js": "^13.1.0",
+    "mongodb": "^4.1.1"
   },
   "repository": {
     "type": "git",

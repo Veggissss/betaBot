@@ -1,6 +1,12 @@
+require('dotenv').config();
+
 const Discord = require('discord.js')
+
 const { MongoClient } = require('mongodb')
-const fs = require('fs');
+const { MessageActionRow, MessageButton } = require('discord.js');
+
+const GuildID = process.env.SERVERID;                        //Discord server ID
+const ChannelID = process.env.CHANNELID;                      //Channel where scoreboard should be posted
 
 //Rank ids:
 const rank_delta = "491506230355951636";
@@ -18,16 +24,53 @@ let serverIcon = null;
 const dbPass = process.env.MONGOPASS;
 
 const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
-const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
 
 //Sends and updates leaderboard and gives out ranks
-function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
-    
+function sendEmbed(client = new Discord.Client(), sort = {score: -1}){
+    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
     //Update global variables
-    guild = discordClient.guilds.cache.get(GuildID);
-    statsChannel = discordClient.channels.cache.get(ChannelID);
+    guild = client.guilds.cache.get(GuildID);
+    statsChannel = client.channels.cache.get(ChannelID);
     serverIcon = guild.iconURL({ dynamic: true, size: 256 });
+
+    checkTop();
+
+    dbClient.connect(err => {
+        if (err) throw err;
+        const collection = dbClient.db("Narkos").collection("Users");
+        
+        collection.find().sort(sort).toArray().then(users => {
+            
+            //User embeds slit up to 50
+            let i = 0;
+            while(users.length > 0){
+                i++;
+                leaderboardEmbed(users, i);
+                //Remove 50
+                users.splice(0,50);
+            }
+        });
+    })
+
+    //Send rewards embed
+    const rewards = new Discord.MessageEmbed()
+    .setAuthor(`Rewards for Narkos`)
+    .setColor(getRandomColor())
+    .setThumbnail(serverIcon)
+    .addFields(
+        { name: 'Reward',           value: `<@&${"711141574964412416"}>\n<@&${rank_delta}>\n<@&${rank_mafia}>\n<@&${rank_trusted}>\n<@&${rank_foreigners}>\n<@&${rank_dj}>`, inline: true },
+        { name: 'Required Score',   value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
+    .setFooter('Updates when user leaves vc!');
+
+    //Index 0 is rewards
+    editEmbed(rewards, 0);
+}
+
+//Sees if the top user has changed
+function checkTop(){
+    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
     dbClient.connect(err => {
         if (err) throw err;
@@ -38,14 +81,14 @@ function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
             const userTop = users[0];
 
             //See if we got a new top rank
-            dbClient.db("Narkos").collection("Top").find().toArray().then(top => {
+            dbClient.db("Narkos").collection("Top").findOne().then(top => {
                 //console.log(top);
-                if (top[0].userID != userTop.userID){
+                if (top.userID != userTop.userID){
                     let role = guild.roles.cache.find(role => role.id === "711141574964412416");
 
-                    removeRole(top[0].userID,role);
+                    removeRole(top.userID,role);
                     giveRole(userTop.userID,role);
-                    console.log(`Removed toprank from ${top[0].username} and gave it to ${userTop.username}`);
+                    console.log(`Removed toprank from ${top.username} and gave it to ${userTop.username}`);
 
                     //Write to db
                     var newValues = { $set: { 
@@ -57,7 +100,7 @@ function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
                         score: userTop.score
                     }  };
 
-                    dbClient.db("Narkos").collection("Top").updateOne({userID: top[0].userID}, newValues, function(err, res) {
+                    dbClient.db("Narkos").collection("Top").updateOne({userID: top.userID}, newValues, function(err, res) {
                         if (err) throw err;
                         dbClient.close();
                     })
@@ -66,28 +109,6 @@ function sendEmbed(discordClient = new Discord.Client(), GuildID, ChannelID){
                     dbClient.close();
                 }
             });
-            
-            //User embeds slit up to 50
-            let i = 0;
-            while(users.length > 0){
-                i++;
-                leaderboardEmbed(users, i);
-                //Remove 50
-                users.splice(0,50);
-            }
-
-            //Send rewards embed
-            const rewards = new Discord.MessageEmbed()
-            .setAuthor(`Rewards for Narkos`)
-            .setColor(getRandomColor())
-            .setThumbnail(serverIcon)
-            .addFields(
-                { name: 'Reward',           value: `<@&${"711141574964412416"}>\n<@&${rank_delta}>\n<@&${rank_mafia}>\n<@&${rank_trusted}>\n<@&${rank_foreigners}>\n<@&${rank_dj}>`, inline: true },
-                { name: 'Required Score',   value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
-            .setFooter('Updates when user leaves vc!');
-
-            //Index 0 is rewards
-            editEmbed(rewards, 0);
         });
     })
 }
@@ -143,7 +164,7 @@ function leaderboardEmbed(users, iteration){
     //Top leaderboard
     if (iteration == 1){
         leaderboard = new Discord.MessageEmbed()
-            .setAuthor(`Leaderboard for Narkos   /   ${guild.memberCount} members`)    //servericon or ,discordClient.user.avatarURL()
+            .setAuthor(`Leaderboard for Narkos   /   ${guild.memberCount} members`)    //servericon or ,client.user.avatarURL()
             .setColor(getRandomColor()) //.setColor(0x51267)
             .addFields(
                 { name: 'Username', value: userNames,   inline: true },
@@ -177,51 +198,77 @@ function editUserEmbed(user){
 }
 
 function editEmbed(embed, i){
-    //Message embeds ids
-    const embedID = fs.readFileSync("embed.json");
-    const embedJson = JSON.parse(embedID); 
+    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
-    //Find index
-    let n = searchJson(embedJson, i);
+    //Connect to db
+    dbClient.connect(err => {
+        if (err) throw err;
 
-    if (n){
-        //Edit message, send it otherwise
-        statsChannel.messages.fetch({around: embedJson[n].id, limit: 1}).then(msg => {
-            const fetchedMsg = msg.first();
+        const collection = dbClient.db("Narkos").collection("Embeds");
 
-            if (fetchedMsg != undefined){
-                fetchedMsg.edit(embed);
+        collection.find({ iteration: i }).toArray().then(embeds => {
+
+            if (embeds[0]){
+                //Edit message, send it otherwise
+                statsChannel.messages.fetch({around: embeds[0].id, limit: 1}).then(msg => {
+                    const fetchedMsg = msg.first();
+
+                    if (fetchedMsg != undefined){
+                        //Add buttons for sorting options
+                        if (i >= 1){
+                            const buttonScore = new MessageButton()
+                                .setCustomId('sortByScore')
+                                .setLabel('Score')
+                                .setStyle('SUCCESS');
+
+                            const buttonMsg = new MessageButton()
+                                .setCustomId('sortByMsg')
+                                .setLabel('Messages')
+                                .setStyle('PRIMARY');
+
+                            const buttonHrs = new MessageButton()
+                                .setCustomId('sortByHrs')
+                                .setLabel('Hours')
+                                .setStyle('DANGER');
+
+                            const row = new MessageActionRow()
+                            .addComponents(
+                                buttonHrs,buttonMsg,buttonScore
+                            );
+
+                            fetchedMsg.edit({ embeds: [embed], components: [row] });
+                        }
+                        else{
+                            fetchedMsg.edit({ embeds: [embed] });
+                        } 
+                    }
+                    else{
+                        console.log("Rewards embed not found");
+                    }
+
+                    //Close connection
+                    dbClient.close();
+                });
             }
             else{
-                console.log("Rewards embed not found");
+                console.log("Could't find iteration: ",i);
+                statsChannel.send({ embeds: [embed]}).then(sent => {
+                    //Write to db
+                    var newValues = { 
+                        iteration: i,
+                        id: sent.id
+                    };
+
+                    //Add to db
+                    collection.insertOne(newValues, function(err, res) {
+                        if (err) throw err;
+                        //Close db connection
+                        dbClient.close();
+                    });
+                });
             }
-        });
-    }
-    else{
-        console.log("Could't find iteration: ",i);
-        statsChannel.send(embed).then(sent => {
-            let newMessageID = {
-                iteration: i,
-                id: sent.id
-            };
-
-            embedJson.push(newMessageID);
-
-            fs.writeFileSync("embed.json", JSON.stringify(embedJson, null, 2), err => { if (err) throw err; });
-        });
-    }
-}
-
-//Find user by id, if not found then = null
-function searchJson(jsonArray, i){
-    for (var n in jsonArray){
-        if (jsonArray[n].iteration == i){
-            //console.log("Found UserID");
-            return n;
-        }
-    }
-    //console.log("User not Found :P");
-    return null;
+        })
+    })
 }
 
 //Get a random color
@@ -232,20 +279,8 @@ function getRandomColor() {
       color += letters[Math.floor(Math.random() * 16)];
     }
     return color;
-  }
-
-//Returns comparer function
-function getSortOrder(prop) {    
-    return function(a, b) {    
-        if (a[prop] > b[prop]) {    
-            return -1;    
-        } 
-        else if (a[prop] < b[prop]) {    
-            return 1;    
-        }    
-        return 0;    
-    }    
 }
+
 
 //Give role rewards
 function giveRole(userID,role){
