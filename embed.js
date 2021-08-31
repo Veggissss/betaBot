@@ -244,9 +244,14 @@ function editEmbed(embed, i){
                                 .setLabel('Hours')
                                 .setStyle('DANGER');
 
+                            const buttonRepo = new MessageButton()
+                                .setLabel('Git')
+                                .setURL("https://github.com/Veggissss/betaBot")
+                                .setStyle('LINK');
+
                             const row = new MessageActionRow()
                             .addComponents(
-                                buttonHrs,buttonMsg,buttonScore
+                                buttonHrs,buttonMsg,buttonScore,buttonRepo
                             );
 
                             fetchedMsg.edit({ embeds: [embed], components: [row] });
@@ -271,7 +276,7 @@ function editEmbed(embed, i){
                             fetchedMsg.edit({ embeds: [embed], components: [row] });
                         }
                         else{
-                            fetchedMsg.edit({ embeds: [embed] });
+                            fetchedMsg.edit({ embeds: [embed], components: [] });
                         } 
                     }
                     else{
