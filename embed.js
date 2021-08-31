@@ -2,7 +2,7 @@ require('dotenv').config();
 
 const Discord = require('discord.js')
 
-const { MongoClient } = require('mongodb')
+const { MongoClient } = require('mongodb');
 const { MessageActionRow, MessageButton } = require('discord.js');
 
 const GuildID = process.env.SERVERID;                        //Discord server ID
@@ -16,13 +16,12 @@ const rank_foreigners = "641358849865154581";
 const rank_dj = "451446408827109387";
 
 //Global variables
-let guild = null;
-let statsChannel = null;
-let serverIcon = null;
+var guild = null;
+var statsChannel = null;
+var serverIcon = null;
 
 //Mongodb
 const dbPass = process.env.MONGOPASS;
-
 const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
 
@@ -126,7 +125,7 @@ function leaderboardEmbed(users, iteration){
         var voiceHour= Math.round((voiceMins/60)*10)/10;
 
         //⌛ 💬
-        userNames += `\`${i + 1}\` ${users[i].username}\n`;
+        userNames += `\`${iteration * (i + 1)}\` ${users[i].username}\n`;
         userMsgTime += `\`${voiceHour} hrs / ${users[i].messages} msg\`\n`;
         userScore+= `\`${score}\`\n`;
 
@@ -181,16 +180,30 @@ function editUserEmbed(user){
     var voiceHour= Math.round((voiceMins/60)*10)/10;
 
     getMember(user.userID).then(member =>{
-        let userCard = new Discord.MessageEmbed()
-        .setAuthor(`${user.username}'s stats`)
-        .setColor(getRandomColor()) //.setColor(0x51267)
-        .setThumbnail(member.user.avatarURL({ dynamic: true }))
-        .addFields(
-            { name: 'Hours',    value: `\`${voiceHour}\``,   inline: true },
-            { name: 'Messages', value: `\`${user.messages}\``, inline: true },
-            { name: 'Score',    value: `\`${user.score}\``,   inline: true })
-        .setFooter('Shows last active user')
-        .setTimestamp(member.user.createdAt);
+        let userCard;
+        if (member){
+            userCard = new Discord.MessageEmbed()
+            .setAuthor(`${user.username}'s stats`)
+            .setColor(getRandomColor()) //.setColor(0x51267)
+            .setThumbnail(member.user.avatarURL({ dynamic: true }))
+            .addFields(
+                { name: 'Hours',    value: `\`${voiceHour}\``,   inline: true },
+                { name: 'Messages', value: `\`${user.messages}\``, inline: true },
+                { name: 'Score',    value: `\`${user.score}\``,   inline: true })
+            .setFooter('First Joined Discord On')
+            .setTimestamp(member.user.createdAt);
+        }
+        //If user has left the server
+        else{
+            userCard = new Discord.MessageEmbed()
+            .setAuthor(`${user.username}'s stats`)
+            .setColor(getRandomColor()) //.setColor(0x51267)
+            .addFields(
+                { name: 'Hours',    value: `\`${voiceHour}\``,   inline: true },
+                { name: 'Messages', value: `\`${user.messages}\``, inline: true },
+                { name: 'Score',    value: `\`${user.score}\``,   inline: true })
+            .setFooter('First Joined Discord On');
+        }
 
         //-1 is reseved for userCards
         editEmbed(userCard, -1);
@@ -215,16 +228,16 @@ function editEmbed(embed, i){
 
                     if (fetchedMsg != undefined){
                         //Add buttons for sorting options
-                        if (i >= 1){
-                            const buttonScore = new MessageButton()
-                                .setCustomId('sortByScore')
-                                .setLabel('Score')
-                                .setStyle('SUCCESS');
-
+                        if (i == 1){
                             const buttonMsg = new MessageButton()
                                 .setCustomId('sortByMsg')
                                 .setLabel('Messages')
                                 .setStyle('PRIMARY');
+
+                            const buttonScore = new MessageButton()
+                                .setCustomId('sortByScore')
+                                .setLabel('Score')
+                                .setStyle('SUCCESS');
 
                             const buttonHrs = new MessageButton()
                                 .setCustomId('sortByHrs')
@@ -234,6 +247,25 @@ function editEmbed(embed, i){
                             const row = new MessageActionRow()
                             .addComponents(
                                 buttonHrs,buttonMsg,buttonScore
+                            );
+
+                            fetchedMsg.edit({ embeds: [embed], components: [row] });
+                        }
+                        //User stat card
+                        else if (i == -1){
+                            const buttonName = new MessageButton()
+                                .setCustomId('updateName')
+                                .setLabel('Update Username')
+                                .setStyle('SUCCESS');
+                                
+                            const buttonRandom = new MessageButton()
+                                .setCustomId('updateRandom')
+                                .setLabel('Random User')
+                                .setStyle('DANGER');
+
+                            const row = new MessageActionRow()
+                            .addComponents(
+                                buttonName,buttonRandom
                             );
 
                             fetchedMsg.edit({ embeds: [embed], components: [row] });
