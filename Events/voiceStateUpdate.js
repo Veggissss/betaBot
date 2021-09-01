@@ -129,13 +129,21 @@ module.exports = {
                         
                         console.log(`${user[0].username} was in vc for ${time/1000}s\n`);
 
-                        //Write to db
-                        var newValues = { $set: {
+                        //Add to temp userprofile so score can be updated
+                        let userEntry = { 
+                            userID:    user[0].userID,
+                            username:  user[0].username,
+                            messages:  user[0].messages,
                             voiceTime: user[0].voiceTime + time,
-                            score: calculateScore(user[0]) 
-                        } };
+                            voiceJoin: user[0].voiceJoin,
+                            score:     user[0].score
+                        };
+        
+                        //Update score
+                        userEntry.score = calculateScore(userEntry);
 
-                        collection.updateOne({userID: oldMember.member.user.id}, newValues).then(res =>{
+                        //Write to db
+                        collection.updateOne({userID: oldMember.member.user.id}, { $set: userEntry }).then(res =>{
                             //console.log("Updated: "+oldMember.member.user.id);
                             
                             //Close db connection
@@ -186,14 +194,21 @@ module.exports = {
                             
                             console.log(`${user[0].username} was in vc for ${time/1000}s\n`);
 
-                            //Write to db
-                            var newValues = { $set: {
+                            //Add to temp userprofile so score can be updated
+                            let userEntry = { 
+                                userID:    user[0].userID,
+                                username:  user[0].username,
+                                messages:  user[0].messages,
                                 voiceTime: user[0].voiceTime + time,
-                                voiceJoin: 0,
-                                score: calculateScore(user[0])
-                            } };
+                                voiceJoin: user[0].voiceJoin,
+                                score:     user[0].score
+                            };
 
-                            collection.updateOne({userID: oldMember.member.user.id}, newValues).then(res =>{
+                            //Update score
+                            userEntry.score = calculateScore(userEntry);
+
+                            //Write to db
+                            collection.updateOne({userID: oldMember.member.user.id}, { $set: userEntry }).then(res =>{
                                 //console.log("Updated: "+oldMember.member.user.id);
                                 
                                 //Close db connection
