@@ -158,6 +158,7 @@ module.exports = {
                         editUserEmbed(user[0]);
                     }
                     else {
+                        dbClient.close();
                         console.log(`User not found in db: ${oldMember.member.user.id}`);
                     }
                 })
@@ -216,6 +217,7 @@ module.exports = {
                             });
                         }
                         else{
+                            dbClient.close();
                             console.log(`User not found, ID: ${oldMember.member.user.id}`);
                         }
                     })
@@ -252,6 +254,7 @@ module.exports = {
                             });
                         }
                         else{
+                            dbClient.close();
                             console.log(`User could not be found ID: ${oldMember.member.user.id}`);
                         }
                     })

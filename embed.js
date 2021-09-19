@@ -50,6 +50,7 @@ function sendEmbed(client = new Discord.Client(), sort = {score: -1}){
                 //Remove 50
                 users.splice(0,50);
             }
+            dbClient.close();
         });
     })
 
