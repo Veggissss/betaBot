@@ -80,6 +80,15 @@ client.on('interactionCreate', async interaction => {
             })
         }
     }
+    else if (interaction.isSelectMenu()){
+        if (interaction.customId == "selectPage"){
+            if (!interaction.values[0]) return;
+
+            //eg page 1 = index 0
+            const p = parseInt(interaction.values[0]) - 1;
+            sendEmbed(client, undefined, p);
+        }
+    }
 });
 
 //Update the scoreboard and user card

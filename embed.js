@@ -3,7 +3,7 @@ require('dotenv').config();
 const Discord = require('discord.js')
 
 const { MongoClient } = require('mongodb');
-const { MessageActionRow, MessageButton } = require('discord.js');
+const { MessageActionRow, MessageButton, MessageSelectMenu } = require('discord.js');
 
 const GuildID = process.env.SERVERID;                        //Discord server ID
 const ChannelID = process.env.CHANNELID;                      //Channel where scoreboard should be posted
@@ -24,32 +24,34 @@ var serverIcon = null;
 const dbPass = process.env.MONGOPASS;
 const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
+var currentSort = {score: -1};
+var currentPage = 0;
 
 //Sends and updates leaderboard and gives out ranks
-function sendEmbed(client = new Discord.Client(), sort = {score: -1}){
+function sendEmbed(client = new Discord.Client(), sort = currentSort, page = currentPage){
     const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    currentSort = sort;
+    currentPage = page;
 
     //Update global variables
     guild = client.guilds.cache.get(GuildID);
     statsChannel = client.channels.cache.get(ChannelID);
     serverIcon = guild.iconURL({ dynamic: true, size: 256 });
 
+    //Check for updated topuser
     checkTop();
 
+    //Get users value based on sort and page
     dbClient.connect(err => {
         if (err) throw err;
         const collection = dbClient.db("Narkos").collection("Users");
         
         collection.find().sort(sort).toArray().then(users => {
-            
-            //User embeds slit up to 50
-            let i = 0;
-            while(users.length > 0){
-                i++;
-                leaderboardEmbed(users, i);
-                //Remove 50
-                users.splice(0,50);
-            }
+            //User embeds slit up to 30
+            const offset = page * 30;
+            users = users.slice(offset, offset+30);
+        
+            leaderboardEmbed(users, page);
             dbClient.close();
         });
     })
@@ -113,20 +115,21 @@ function checkTop(){
     })
 }
 
-function leaderboardEmbed(users, iteration){
+function leaderboardEmbed(users, page = 0){
     //Str
     let userScore='';
     let userNames = '';
     let userMsgTime = '';
 
     //Max 50 per embed size limit (1024 characters) per field value
-    for (var i = 0; i < 50 && i < users.length; i++) {
+    for (var i = 0; i < users.length; i++) {
         var score = users[i].score;
         var voiceMins= users[i].voiceTime/1000/60;
         var voiceHour= Math.round((voiceMins/60)*10)/10;
+        var userNr = (page*30) + (i+1);
 
         //⌛ 💬
-        userNames += `\`${iteration * (i + 1)}\` ${users[i].username}\n`;
+        userNames += `\`${userNr}\` ${users[i].username}\n`;
         userMsgTime += `\`${voiceHour} hrs / ${users[i].messages} msg\`\n`;
         userScore+= `\`${score}\`\n`;
 
@@ -151,9 +154,10 @@ function leaderboardEmbed(users, iteration){
         //console.log(`Gave rank ${role.name} to ${users[i].username}`);
         giveRole(users[i].userID, role);
     }
-
  
-    let leaderboard = new Discord.MessageEmbed()
+    //Top leaderboard
+    const leaderboard = new Discord.MessageEmbed()
+        .setAuthor(`Leaderboard for Narkos   /   ${guild.memberCount} members`)    //servericon or ,client.user.avatarURL()
         .setColor(getRandomColor()) //.setColor(0x51267)
         .addFields(
             { name: 'Username', value: userNames,   inline: true },
@@ -161,18 +165,7 @@ function leaderboardEmbed(users, iteration){
             { name: 'Score',    value: userScore,   inline: true })
         .setFooter('Score:  5 points per message  /  30 points per hour');
 
-    //Top leaderboard
-    if (iteration == 1){
-        leaderboard = new Discord.MessageEmbed()
-            .setAuthor(`Leaderboard for Narkos   /   ${guild.memberCount} members`)    //servericon or ,client.user.avatarURL()
-            .setColor(getRandomColor()) //.setColor(0x51267)
-            .addFields(
-                { name: 'Username', value: userNames,   inline: true },
-                { name: 'Stats',    value: userMsgTime, inline: true },
-                { name: 'Score',    value: userScore,   inline: true })
-            .setFooter('Score:  5 points per message  /  30 points per hour');
-    }
-    editEmbed(leaderboard, iteration);
+    editEmbed(leaderboard, 1);
 }
 
 //Smal embed that shows a user's stats
@@ -250,12 +243,26 @@ function editEmbed(embed, i){
                                 .setURL("https://github.com/Veggissss/betaBot")
                                 .setStyle('LINK');
 
-                            const row = new MessageActionRow()
-                            .addComponents(
-                                buttonHrs,buttonMsg,buttonScore,buttonRepo
-                            );
+                            const selectPage = new MessageSelectMenu()
+                                .setCustomId('selectPage')
+                                .setPlaceholder('Change page')
+                                .addOptions([
+                                    {
+                                        label: 'Page 1',
+                                        description: 'Show user nr.1-30!',
+                                        value: '1',
+                                    },
+                                    {
+                                        label: 'Page 2',
+                                        description: 'Show user nr.31-60!',
+                                        value: '2',
+                                    },
+                                ]);
 
-                            fetchedMsg.edit({ embeds: [embed], components: [row] });
+                            const rowButtons = new MessageActionRow().addComponents(buttonHrs,buttonMsg,buttonScore,buttonRepo);
+                            const rowMenu = new MessageActionRow().addComponents(selectPage);
+
+                            fetchedMsg.edit({ embeds: [embed], components: [rowButtons, rowMenu] });
                         }
                         //User stat card
                         else if (i == -1){
