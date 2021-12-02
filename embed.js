@@ -43,7 +43,12 @@ function sendEmbed(client = new Discord.Client(), sort = currentSort, page = cur
 
     //Get users value based on sort and page
     dbClient.connect(err => {
-        if (err) throw err;
+        //if (err) throw err;
+        if (err){
+            console.log("Could not connect to db in embed.js");
+            console.log(err);
+            return;
+        }
         const collection = dbClient.db("Narkos").collection("Users");
         
         collection.find().sort(sort).toArray().then(users => {
@@ -75,7 +80,12 @@ function checkTop(){
     const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
     dbClient.connect(err => {
-        if (err) throw err;
+        //if (err) throw err;
+        if (err){
+            console.log("Could not connect to db in embed.js");
+            console.log(err);
+            return;
+        }
 
         const collection = dbClient.db("Narkos").collection("Users");
         
@@ -209,7 +219,12 @@ function editEmbed(embed, i){
 
     //Connect to db
     dbClient.connect(err => {
-        if (err) throw err;
+        //if (err) throw err;
+        if (err){
+            console.log("Could not connect to db in embed.js");
+            console.log(err);
+            return;
+        }
 
         const collection = dbClient.db("Narkos").collection("Embeds");
 
@@ -306,7 +321,12 @@ function editEmbed(embed, i){
 
                     //Add to db
                     collection.insertOne(newValues, function(err, res) {
-                        if (err) throw err;
+                        //if (err) throw err;
+                        if (err){
+                            console.log("Could not insert to db in embed.js");
+                            console.log(err);
+                            return;
+                        }
                         //Close db connection
                         dbClient.close();
                     });

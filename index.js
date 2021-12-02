@@ -47,12 +47,23 @@ client.on('interactionCreate', async interaction => {
             const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
             dbClient.connect(err => {
-                if (err) throw err;
+                //if (err) throw err;
+                if (err){
+                    console.log("Could not connect to db in index.js");
+                    console.log(err);
+                    return;
+                }
 
                 const collection = dbClient.db("Narkos").collection("Users");
 
                 collection.updateOne({ userID: interaction.user.id }, { $set: { username: interaction.user.username } }, function(err, res) {
-                    if (err) throw err;
+                    //if (err) throw err;
+                    if (err){
+                        console.log("Could not updateOne in db at index.js");
+                        console.log(err);
+                        return;
+                    }
+
                     updateUserEmbed(interaction);
 
                     dbClient.close();
@@ -65,7 +76,12 @@ client.on('interactionCreate', async interaction => {
             const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
             dbClient.connect(err => {
-                if (err) throw err;
+                //if (err) throw err;
+                if (err){
+                    console.log("Could not connect to db in index.js");
+                    console.log(err);
+                    return;
+                }
 
                 const collection = dbClient.db("Narkos").collection("Users");
 
@@ -96,7 +112,12 @@ function updateUserEmbed(interaction){
     const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
 
     dbClient.connect(err => {
-        if (err) throw err;
+        //if (err) throw err;
+        if (err){
+            console.log("Could not connect to db in index.js");
+            console.log(err);
+            return;
+        }
 
         const collection = dbClient.db("Narkos").collection("Users");
         collection.find({userID: interaction.user.id}).toArray().then(user=>{
