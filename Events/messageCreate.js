@@ -8,10 +8,6 @@ const dbPass = process.env.MONGOPASS;
 //Mongodb
 const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
 
-//Global Variables
-const discordServerID = process.env.SERVERID;                        //Discord server ID
-const discordChannelID = process.env.CHANNELID;                      //Channel where scoreboard should be posted
-
 module.exports = {
 	name: 'messageCreate',
 	execute(message, client) {
@@ -26,7 +22,12 @@ module.exports = {
         //NOT DM
         // Read users.json file 
         dbClient.connect(err => {
-            if (err) throw err;
+            //if (err) throw err;
+            if (err){
+                console.log("Could not connect to db in messageCreate.js");
+                console.log(err);
+                return;
+            }
     
             const collection = dbClient.db("Narkos").collection("Users");
             collection.find({userID: message.author.id}).toArray().then(user=>{
@@ -76,7 +77,13 @@ module.exports = {
     
                     //Add to db
                     collection.insertOne(userEntry, function(err, res) {
-                        if (err) throw err;
+                        //if (err) throw err;
+                        if (err){
+                            console.log("Could not add user to db in messageCreate.js");
+                            console.log(err);
+                            return;
+                        }
+
                         console.log(`Added ${message.member.user.username} to db!`);
                         
                         //Close db connection

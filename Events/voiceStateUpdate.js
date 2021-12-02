@@ -43,7 +43,12 @@ module.exports = {
             var joinTime = date.getTime();
 
             dbClient.connect(err => {
-                if (err) throw err;
+                //if (err) throw err;
+                if (err){
+                    console.log("Could not connect to db in voiceStateUpdate.js");
+                    console.log(err);
+                    return;
+                }
         
                 const collection = dbClient.db("Narkos").collection("Users");
                 collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
@@ -83,7 +88,12 @@ module.exports = {
 
                     //Add to db
                     collection.insertOne(userEntry, function(err, res) {
-                        if (err) throw err;
+                        //if (err) throw err;
+                        if (err){
+                            console.log("Could not insert to db in voiceStateUpdate.js");
+                            console.log(err);
+                            return;
+                        }
                         //console.log(`Added ${oldMember.member.user.username} to db!`);
                         
                         //Close db connection
@@ -98,7 +108,12 @@ module.exports = {
             console.log(`${username} left!\n`);
 
             dbClient.connect(err => {
-                if (err) throw err;
+                //if (err) throw err;
+                if (err){
+                    console.log("Could not connect to db in voiceStateUpdate.js");
+                    console.log(err);
+                    return;
+                }
         
                 const collection = dbClient.db("Narkos").collection("Users");
                 collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
@@ -174,7 +189,12 @@ module.exports = {
 
                 //Write time to user
                 dbClient.connect(err => {
-                    if (err) throw err;
+                    //if (err) throw err;
+                    if (err){
+                        console.log("Could not connect to db in voiceStateUpdate.js");
+                        console.log(err);
+                        return;
+                    }
             
                     const collection = dbClient.db("Narkos").collection("Users");
                     collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
@@ -229,7 +249,12 @@ module.exports = {
                 //start time user
 
                 dbClient.connect(err => {
-                    if (err) throw err;
+                    //if (err) throw err;
+                    if (err){
+                        console.log("Could not connect to db in voiceStateUpdate.js");
+                        console.log(err);
+                        return;
+                    }
             
                     const collection = dbClient.db("Narkos").collection("Users");
                     collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
