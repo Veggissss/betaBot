@@ -411,7 +411,7 @@ async function getMember(userID){
 
 function calculateScore(entry){
     //5 points for message, 30 points per hour in vc
-    let calculation = (5 * entry.messages) + (30*(entry.voiceTime /1000/60/60)) + (entry.dailyClaims * (50 * Math.log10(1+entry.dailyMax)));
+    let calculation = (5 * entry.messages) + (30*(entry.voiceTime /1000/60/60)) + (entry.dailyClaims * (50 * (1 + Math.log10(entry.dailyMax))));
     return Math.round(calculation);
 }
 

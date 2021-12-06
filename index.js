@@ -95,8 +95,7 @@ client.on('interactionCreate', async interaction => {
                     var now = new Date().getTime();
                     const milliday = 86400000;
 
-                    var multiplier = 1 + Math.log10(user.dailyMax+1);
-                    var dailyScore = Math.round(50 * (multiplier));
+                    var dailyScore = 50 * (1 + Math.log10(Math.max(user.dailyMax, user.dailyStreak+1)))
 
                     sendEmbed(client);
 
