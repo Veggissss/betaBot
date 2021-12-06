@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const { MongoClient } = require('mongodb')
-const { sendEmbed, editUserEmbed } = require('../embed.js');
+const { sendEmbed, editDailyEmbed } = require('../embed.js');
 
 const dbPass = process.env.MONGOPASS;
 
@@ -42,7 +42,11 @@ module.exports = {
                         messages:  user[0].messages+1,
                         voiceTime: user[0].voiceTime,
                         voiceJoin: user[0].voiceJoin,
-                        score:     user[0].score
+                        score:     user[0].score,
+                        dailyTime: user[0].dailyTime,
+                        dailyClaims: user[0].dailyClaims,
+                        dailyStreak: user[0].dailyStreak,
+                        dailyMax: user[0].dailyMax
                     };
     
                     //Update score
@@ -58,10 +62,8 @@ module.exports = {
     
                     //Update leaderboard embed
                     sendEmbed(client);
-    
-                    //Update last user activity embed
-                    editUserEmbed(userEntry);
-    
+                    
+                    editDailyEmbed(client,message.author.id, msg = `${userEntry.username} has now sent ${userEntry.messages} messages.\n And have got \`${userEntry.score}\` points in score!`);
                 }
                 else{
                     console.log("User not found!");
@@ -72,7 +74,11 @@ module.exports = {
                         messages:   1,
                         voiceTime:  0,
                         voiceJoin:  0,
-                        score: 5
+                        score: 5,
+                        dailyTime: 0,
+                        dailyClaims: 0,
+                        dailyStreak: 0,
+                        dailyMax: 0
                     }; 
     
                     //Add to db
@@ -92,9 +98,6 @@ module.exports = {
     
                     //Update leaderboard embed
                     sendEmbed(client);
-    
-                    //Update last user activity embed
-                    editUserEmbed(userEntry);
                 }
             })
         })

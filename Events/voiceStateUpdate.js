@@ -3,7 +3,7 @@ require('dotenv').config();
 const { MongoClient } = require('mongodb')
 
 //Import local
-const { sendEmbed, editUserEmbed } = require('../embed.js');
+const { sendEmbed, editDailyEmbed } = require('../embed.js');
 
 //Mongodb
 const dbPass = process.env.MONGOPASS;
@@ -83,7 +83,11 @@ module.exports = {
                         messages:   0,
                         voiceTime:  0,
                         voiceJoin:  joinTime,
-                        score: 0
+                        score: 0,
+                        dailyTime: 0,
+                        dailyClaims: 0,
+                        dailyStreak: 0,
+                        dailyMax: 0
                     }; 
 
                     //Add to db
@@ -103,7 +107,7 @@ module.exports = {
             
             })
         })
-            //User leaves
+        //User leaves
         }else if (newVoice == null) {
             console.log(`${username} left!\n`);
 
@@ -116,6 +120,8 @@ module.exports = {
                 }
         
                 const collection = dbClient.db("Narkos").collection("Users");
+                //collection.findOne({userID : oldMember.member.user.id}).then(user => {
+                 
                 collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
                     
                     //User in db
@@ -151,7 +157,11 @@ module.exports = {
                             messages:  user[0].messages,
                             voiceTime: user[0].voiceTime + time,
                             voiceJoin: user[0].voiceJoin,
-                            score:     user[0].score
+                            score:     user[0].score,
+                            dailyTime: user[0].dailyTime,
+                            dailyClaims: user[0].dailyClaims,
+                            dailyStreak: user[0].dailyStreak,
+                            dailyMax: user[0].dailyMax
                         };
         
                         //Update score
@@ -169,8 +179,10 @@ module.exports = {
                         //Update leaderboard embed
                         sendEmbed(client);
 
-                        //Update last user activity embed
-                        editUserEmbed(user[0]);
+                        //Update daily embed
+                        var voiceMins= Math.round((time/1000/60)*10)/10;
+                        var voiceHour= Math.round((userEntry.voiceTime/1000/60/60)*10)/10;
+                        editDailyEmbed(client,oldMember.member.user.id, msg = `${userEntry.username} was in vc for \`${voiceMins}\` min.\n${userEntry.username} has now a total of \`${voiceHour}\` hrs.`);
                     }
                     else {
                         dbClient.close();
@@ -222,7 +234,11 @@ module.exports = {
                                 messages:  user[0].messages,
                                 voiceTime: user[0].voiceTime + time,
                                 voiceJoin: user[0].voiceJoin,
-                                score:     user[0].score
+                                score:     user[0].score,
+                                dailyTime: user[0].dailyTime,
+                                dailyClaims: user[0].dailyClaims,
+                                dailyStreak: user[0].dailyStreak,
+                                dailyMax: user[0].dailyMax
                             };
 
                             //Update score

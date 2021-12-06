@@ -109,7 +109,11 @@ function checkTop(){
                         messages:   userTop.messages,
                         voiceTime:  userTop.voiceTime,
                         voiceJoin:  userTop.voiceJoin,
-                        score: userTop.score
+                        score: userTop.score,
+                        dailyTime: userTop.dailyTime,
+                        dailyClaims: userTop.dailyClaims,
+                        dailyStreak: userTop.dailyStreak,
+                        dailyMax: userTop.dailyMax
                     }  };
 
                     dbClient.db("Narkos").collection("Top").updateOne({userID: top.userID}, newValues, function(err, res) {
@@ -179,38 +183,61 @@ function leaderboardEmbed(users, page = 0){
 }
 
 //Smal embed that shows a user's stats
-function editUserEmbed(user){
-    var voiceMins= user.voiceTime/1000/60;
-    var voiceHour= Math.round((voiceMins/60)*10)/10;
+function editDailyEmbed(client, user_id, msg = "No message provided"){
+    const milliday = 86400000;
 
-    getMember(user.userID).then(member =>{
-        let userCard;
-        if (member){
-            userCard = new Discord.MessageEmbed()
-            .setAuthor(`${user.username}'s stats`)
-            .setColor(getRandomColor()) //.setColor(0x51267)
-            .setThumbnail(member.user.avatarURL({ dynamic: true }))
-            .addFields(
-                { name: 'Hours',    value: `\`${voiceHour}\``,   inline: true },
-                { name: 'Messages', value: `\`${user.messages}\``, inline: true },
-                { name: 'Score',    value: `\`${user.score}\``,   inline: true })
-            .setFooter('First Joined Discord On')
-            .setTimestamp(member.user.createdAt);
-        }
-        //If user has left the server
-        else{
-            userCard = new Discord.MessageEmbed()
-            .setAuthor(`${user.username}'s stats`)
-            .setColor(getRandomColor()) //.setColor(0x51267)
-            .addFields(
-                { name: 'Hours',    value: `\`${voiceHour}\``,   inline: true },
-                { name: 'Messages', value: `\`${user.messages}\``, inline: true },
-                { name: 'Score',    value: `\`${user.score}\``,   inline: true })
-            .setFooter('First Joined Discord On');
+    guild = client.guilds.cache.get(GuildID);
+    statsChannel = client.channels.cache.get(ChannelID);
+
+    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+
+    dbClient.connect(err => {
+        //if (err) throw err;
+        if (err){
+            console.log("Could not connect to db in embed.js");
+            console.log(err);
+            return;
         }
 
-        //-1 is reseved for userCards
-        editEmbed(userCard, -1);
+        const collection = dbClient.db("Narkos").collection("Users");
+
+        collection.findOne({ userID: user_id}).then(user =>{
+            guild.members.fetch(user.userID).then(member =>{
+                let userCard = new Discord.MessageEmbed()
+                .setAuthor(`Daily Rewards Stats`)
+                .setColor(getRandomColor())
+                .setDescription(msg)
+                .setThumbnail(member.user.avatarURL({ dynamic: true }))
+                .addFields(
+                    { name: 'Daily Claims',  value: `\`${user.dailyClaims}\``,   inline: true },
+                    { name: 'Current Streak',  value: `\`${user.dailyStreak}\``, inline: true },
+                    { name: 'Highest Streak', value: `\`${user.dailyMax}\``,   inline: true }) //,{ name: 'Score',   value: `\`${user.score}\``, inline: false}
+                .setFooter('Next claim available')
+                .setTimestamp(user.dailyTime + milliday);
+
+                if (user.score >= 10000){
+                    rank = rank_delta;
+                }
+                else if (user.score >= 5000){
+                    rank = rank_mafia;
+                }
+                else if (user.score >= 2000){
+                    rank = rank_trusted;
+                }
+                else if (user.score >= 500){
+                    rank = rank_foreigners;
+                }
+        
+                let role = guild.roles.cache.find(role => role.id === rank);
+        
+                //console.log(`Gave rank ${role.name} to ${users[i].username}`);
+                giveRole(user.userID, role);
+        
+                //-1 is reseved for userCards
+                editEmbed(userCard, -1);
+            })
+            dbClient.close();
+        })
     })
 }
 
@@ -246,12 +273,12 @@ function editEmbed(embed, i){
                             const buttonScore = new MessageButton()
                                 .setCustomId('sortByScore')
                                 .setLabel('Score')
-                                .setStyle('SUCCESS');
+                                .setStyle('DANGER');
 
                             const buttonHrs = new MessageButton()
                                 .setCustomId('sortByHrs')
                                 .setLabel('Hours')
-                                .setStyle('DANGER');
+                                .setStyle('SUCCESS');
 
                             const buttonRepo = new MessageButton()
                                 .setLabel('Git')
@@ -284,16 +311,21 @@ function editEmbed(embed, i){
                             const buttonName = new MessageButton()
                                 .setCustomId('updateName')
                                 .setLabel('Update Username')
-                                .setStyle('SUCCESS');
-                                
-                            const buttonRandom = new MessageButton()
-                                .setCustomId('updateRandom')
-                                .setLabel('Random User')
                                 .setStyle('DANGER');
+
+                            const buttonStats = new MessageButton()
+                                .setCustomId('showStats')
+                                .setLabel('Show My Stats')
+                                .setStyle('PRIMARY');
+                                
+                            const buttonDaily = new MessageButton()
+                                .setCustomId('claimDaily')
+                                .setLabel('Claim Daily')
+                                .setStyle('SUCCESS');
 
                             const row = new MessageActionRow()
                             .addComponents(
-                                buttonName,buttonRandom
+                                buttonDaily,buttonStats,buttonName
                             );
 
                             fetchedMsg.edit({ embeds: [embed], components: [row] });
@@ -378,4 +410,4 @@ async function getMember(userID){
 }
 
 
-module.exports = {sendEmbed, editUserEmbed};
+module.exports = {sendEmbed, editDailyEmbed};
