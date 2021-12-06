@@ -1,7 +1,7 @@
 require('dotenv').config();
 
 const { MongoClient } = require('mongodb')
-const { sendEmbed, editDailyEmbed } = require('../embed.js');
+const { sendEmbed,calculateScore, editDailyEmbed } = require('../embed.js');
 
 const dbPass = process.env.MONGOPASS;
 
@@ -103,11 +103,4 @@ module.exports = {
         })
         }
     }
-}
-
-
-function calculateScore(entry){
-    //5 points for message, 30 points per hour in vc
-    let calculation = (5 * entry.messages + (30*(entry.voiceTime /1000/60/60)));
-    return Math.round(calculation);
 }

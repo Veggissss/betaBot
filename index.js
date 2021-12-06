@@ -124,7 +124,7 @@ client.on('interactionCreate', async interaction => {
                     else{
                         console.log(`${user.username} claimed his/her daily reward! But the streak has been lost`);
                         
-                        collection.updateOne({ userID: interaction.user.id }, { $set: { score: user.score+dailyScore, dailyClaims: user.dailyClaims+1, dailyTime: now, dailyStreak: 0 }}, function(err, res){
+                        collection.updateOne({ userID: interaction.user.id }, { $set: { score: user.score+dailyScore, dailyClaims: user.dailyClaims+1, dailyTime: now, dailyStreak: 1, dailyMax: Math.max(user.dailyMax, user.dailyStreak+1) }}, function(err, res){
                             if (err){
                                 console.log(`Could not update daily for user: ${user.username}.\n${err}`);
                                 return;
