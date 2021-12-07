@@ -20,7 +20,6 @@ const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatab
 client.on('interactionCreate', async interaction => {
 	if (interaction.isCommand()){
         const command = client.commands.get(interaction.commandName);
-
         if (!command) return;
 
         try {
@@ -95,7 +94,7 @@ client.on('interactionCreate', async interaction => {
                     var now = new Date().getTime();
                     const milliday = 86400000;
 
-                    var dailyScore = 50 * (1 + Math.log10(Math.max(user.dailyMax, user.dailyStreak+1)))
+                    var dailyScore = Math.round(50 * (1 + Math.log10(Math.max(user.dailyMax, user.dailyStreak+1))));
 
                     sendEmbed(client);
 
@@ -107,7 +106,7 @@ client.on('interactionCreate', async interaction => {
                                 console.log(`Could not update daily for user: ${user.username}.\n${err}`);
                                 return;
                             }
-                            editDailyEmbed(client,interaction.user.id, `${user.username} got ${dailyScore} points from claiming your daily reward!`);
+                            editDailyEmbed(client,interaction.user.id, `${user.username} got \`${dailyScore}\` points from claiming your daily reward!`);
 
                             dbClient.close();
                         })
@@ -133,7 +132,7 @@ client.on('interactionCreate', async interaction => {
                                 editDailyEmbed(client,interaction.user.id, `${user.username} got ${dailyScore} points!`);
                             }
                             else{
-                                editDailyEmbed(client,interaction.user.id, `Looks like you lost your streak ${user.username}!\nAt least you got ${dailyScore} points!`);
+                                editDailyEmbed(client,interaction.user.id, `Looks like you lost your streak ${user.username}!\nAt least you got \`${dailyScore}\` points!`);
                             }
 
                             dbClient.close();
@@ -148,7 +147,7 @@ client.on('interactionCreate', async interaction => {
             dbClient.connect(err => {
                 //if (err) throw err;
                 if (err){
-                    console.log("Could not connect to db in index.js; claimDaily");
+                    console.log("Could not connect to db in index.js; showstats");
                     console.log(err);
                     return;
                 }

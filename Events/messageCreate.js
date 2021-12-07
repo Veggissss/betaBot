@@ -63,7 +63,7 @@ module.exports = {
                     //Update leaderboard embed
                     sendEmbed(client);
                     
-                    editDailyEmbed(client,message.author.id, msg = `${userEntry.username} has now sent ${userEntry.messages} messages.\n And have got \`${userEntry.score}\` points in score!`);
+                    editDailyEmbed(client,message.author.id, msg = `${userEntry.username} has now sent \`${userEntry.messages}\` messages.\n And have got \`${userEntry.score}\` points in score!`);
                 }
                 else{
                     console.log("User not found!");

@@ -18,7 +18,6 @@ const rank_dj = "451446408827109387";
 //Global variables
 var guild = null;
 var statsChannel = null;
-var serverIcon = null;
 
 //Mongodb
 const dbPass = process.env.MONGOPASS;
@@ -36,7 +35,9 @@ function sendEmbed(client = new Discord.Client(), sort = currentSort, page = cur
     //Update global variables
     guild = client.guilds.cache.get(GuildID);
     statsChannel = client.channels.cache.get(ChannelID);
-    serverIcon = guild.iconURL({ dynamic: true, size: 256 });
+
+    //Get serverIcon
+    var serverIcon = guild.iconURL({ dynamic: true, size: 256 });
 
     //Check for updated topuser
     checkTop();
