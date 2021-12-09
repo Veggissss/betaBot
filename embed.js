@@ -335,10 +335,17 @@ function editEmbed(embed, i){
                             fetchedMsg.edit({ embeds: [embed], components: [] });
                         } 
                     }
+                    //If message is deleted
                     else{
-                        console.log("Rewards embed not found");
+                        console.log("Rewards embed not found!");
+                        statsChannel.send({ embeds: [embed]}).then(sent => {
+                            collection.updateOne({ iteration: i },{ $set: { id: sent.id } }, function(err, res){
+                                if (err){
+                                    console.log("Error updating new iteration!");
+                                }
+                            });
+                        })
                     }
-
                     //Close connection
                     dbClient.close();
                 });
@@ -346,14 +353,8 @@ function editEmbed(embed, i){
             else{
                 console.log("Could't find iteration: ",i);
                 statsChannel.send({ embeds: [embed]}).then(sent => {
-                    //Write to db
-                    var newValues = { 
-                        iteration: i,
-                        id: sent.id
-                    };
-
                     //Add to db
-                    collection.insertOne(newValues, function(err, res) {
+                    collection.insertOne({ iteration: i,id: sent.id }, function(err, res) {
                         //if (err) throw err;
                         if (err){
                             console.log("Could not insert to db in embed.js");
@@ -412,7 +413,7 @@ async function getMember(userID){
 
 function calculateScore(entry){
     //5 points for message, 30 points per hour in vc
-    let calculation = (5 * entry.messages) + (30*(entry.voiceTime /1000/60/60)) + (entry.dailyClaims * (50 * (1 + Math.log10(entry.dailyMax))));
+    let calculation = (5 * entry.messages) + (30*(entry.voiceTime /1000/60/60)) + (entry.dailyClaims * (50 * (1 + Math.log10(1+entry.dailyMax))));
     return Math.round(calculation);
 }
 

@@ -106,7 +106,7 @@ client.on('interactionCreate', async interaction => {
                                 console.log(`Could not update daily for user: ${user.username}.\n${err}`);
                                 return;
                             }
-                            editDailyEmbed(client,interaction.user.id, `${user.username} got \`${dailyScore}\` points from claiming your daily reward!`);
+                            editDailyEmbed(client,interaction.user.id, `${user.username} got \`${dailyScore}\` points from the daily reward!`);
 
                             dbClient.close();
                         })
