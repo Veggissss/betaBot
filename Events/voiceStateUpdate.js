@@ -51,10 +51,10 @@ module.exports = {
                 }
         
                 const collection = dbClient.db("Narkos").collection("Users");
-                collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
+                collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
                     
                     //User in db
-                    if (user[0]){
+                    if (user){
                         let time;
                         //If channel is afk no points is given
                         if (afkChannels.includes(newVoice)){
@@ -78,7 +78,7 @@ module.exports = {
                     else{
                     // Defining new user 
                     let userEntry = { 
-                        userID:    oldMember.member.id,
+                        userID:    oldMember.member.user.id,
                         username:  oldMember.member.user.username,
                         messages:   0,
                         voiceTime:  0,
@@ -104,7 +104,6 @@ module.exports = {
                         dbClient.close();
                     });
                 }
-            
             })
         })
         //User leaves
@@ -120,18 +119,17 @@ module.exports = {
                 }
         
                 const collection = dbClient.db("Narkos").collection("Users");
-                //collection.findOne({userID : oldMember.member.user.id}).then(user => {
                  
-                collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
+                collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
                     
                     //User in db
-                    if (user[0]){
+                    if (user){
                         let time;
 
                         var date = new Date();
                         var leaveTime = date.getTime();
 
-                        var joinTime = user[0].voiceJoin;
+                        var joinTime = user.voiceJoin;
 
                         //See if user left a afk channel
                         if (afkChannels.includes(oldVoice)){
@@ -148,20 +146,20 @@ module.exports = {
                             time = 0;
                         }
                         
-                        console.log(`${user[0].username} was in vc for ${time/1000}s\n`);
+                        console.log(`${user.username} was in vc for ${time/1000}s\n`);
 
                         //Add to temp userprofile so score can be updated
                         let userEntry = { 
-                            userID:    user[0].userID,
-                            username:  user[0].username,
-                            messages:  user[0].messages,
-                            voiceTime: user[0].voiceTime + time,
-                            voiceJoin: user[0].voiceJoin,
-                            score:     user[0].score,
-                            dailyTime: user[0].dailyTime,
-                            dailyClaims: user[0].dailyClaims,
-                            dailyStreak: user[0].dailyStreak,
-                            dailyMax: user[0].dailyMax
+                            userID:    user.userID,
+                            username:  user.username,
+                            messages:  user.messages,
+                            voiceTime: user.voiceTime + time,
+                            voiceJoin: user.voiceJoin,
+                            score:     user.score,
+                            dailyTime: user.dailyTime,
+                            dailyClaims: user.dailyClaims,
+                            dailyStreak: user.dailyStreak,
+                            dailyMax: user.dailyMax
                         };
         
                         //Update score
@@ -209,13 +207,13 @@ module.exports = {
                     }
             
                     const collection = dbClient.db("Narkos").collection("Users");
-                    collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
+                    collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
                         
                         //User in db
-                        if (user[0]){
+                        if (user){
                             var date = new Date();
                             var leaveTime = date.getTime();
-                            var joinTime = user[0].voiceJoin;
+                            var joinTime = user.voiceJoin;
 
                             let time = leaveTime - joinTime;
 
@@ -225,20 +223,20 @@ module.exports = {
                                 time = 0;
                             }
                             
-                            console.log(`${user[0].username} was in vc for ${time/1000}s\n`);
+                            console.log(`${user.username} was in vc for ${time/1000}s\n`);
 
                             //Add to temp userprofile so score can be updated
                             let userEntry = { 
-                                userID:    user[0].userID,
-                                username:  user[0].username,
-                                messages:  user[0].messages,
-                                voiceTime: user[0].voiceTime + time,
-                                voiceJoin: user[0].voiceJoin,
-                                score:     user[0].score,
-                                dailyTime: user[0].dailyTime,
-                                dailyClaims: user[0].dailyClaims,
-                                dailyStreak: user[0].dailyStreak,
-                                dailyMax: user[0].dailyMax
+                                userID:    user.userID,
+                                username:  user.username,
+                                messages:  user.messages,
+                                voiceTime: user.voiceTime + time,
+                                voiceJoin: user.voiceJoin,
+                                score:     user.score,
+                                dailyTime: user.dailyTime,
+                                dailyClaims: user.dailyClaims,
+                                dailyStreak: user.dailyStreak,
+                                dailyMax: user.dailyMax
                             };
 
                             //Update score
@@ -263,7 +261,6 @@ module.exports = {
                 console.log(`${oldMember.member.displayName} is no longer afk`);
 
                 //start time user
-
                 dbClient.connect(err => {
                     //if (err) throw err;
                     if (err){
@@ -273,14 +270,14 @@ module.exports = {
                     }
             
                     const collection = dbClient.db("Narkos").collection("Users");
-                    collection.find({userID: oldMember.member.user.id}).toArray().then(user=>{
+                    collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
                         
                         //User in db
-                        if (user[0]){
+                        if (user){
                             var date = new Date();
                             var joinTime = date.getTime();
                     
-                            user[0].voiceJoin = joinTime;
+                            user.voiceJoin = joinTime;
 
                             //Write to db
                             var newValues = { $set: {

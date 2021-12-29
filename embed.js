@@ -147,27 +147,6 @@ function leaderboardEmbed(users, page = 0){
         userNames += `\`${userNr}\` ${users[i].username}\n`;
         userMsgTime += `\`${voiceHour} hrs / ${users[i].messages} msg\`\n`;
         userScore+= `\`${score}\`\n`;
-
-        //Role rewards (delta,mafia,trusted,foregeiner) + DJ
-        var rank = rank_dj;
-        
-        if (score >= 10000){
-            rank = rank_delta;
-        }
-        else if (score >= 5000){
-            rank = rank_mafia;
-        }
-        else if (score >= 2000){
-            rank = rank_trusted;
-        }
-        else if (score >= 500){
-            rank = rank_foreigners;
-        }
-
-        let role = guild.roles.cache.find(role => role.id === rank);
-
-        //console.log(`Gave rank ${role.name} to ${users[i].username}`);
-        giveRole(users[i].userID, role);
     }
  
     //Top leaderboard
@@ -202,7 +181,12 @@ function editDailyEmbed(client, user_id, msg = "No message provided"){
 
         const collection = dbClient.db("Narkos").collection("Users");
 
-        collection.findOne({ userID: user_id}).then(user =>{
+        collection.findOne({userID: user_id}).then(user =>{
+            if (!user){
+                console.log(`UserID: ${user_id}} is not in database!`);
+                return;
+            }
+
             guild.members.fetch(user.userID).then(member =>{
                 let userCard = new Discord.MessageEmbed()
                 .setAuthor(`Daily Rewards Stats`)
@@ -216,6 +200,7 @@ function editDailyEmbed(client, user_id, msg = "No message provided"){
                 .setFooter('Next claim available')
                 .setTimestamp(user.dailyTime + milliday);
 
+                let rank = rank_dj;
                 if (user.score >= 10000){
                     rank = rank_delta;
                 }

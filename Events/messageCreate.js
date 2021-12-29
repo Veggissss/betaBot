@@ -30,23 +30,23 @@ module.exports = {
             }
     
             const collection = dbClient.db("Narkos").collection("Users");
-            collection.find({userID: message.author.id}).toArray().then(user=>{
+            collection.findOne({userID: message.author.id}).toArray().then(user=>{
                 
                 //User in db
-                if (user[0]){
-                    console.log(`${message.author.username} has sent ${user[0].messages + 1} messages`);
+                if (user){
+                    console.log(`${message.author.username} has sent ${user.messages + 1} messages`);
     
                     let userEntry = { 
-                        userID:    user[0].userID,
-                        username:  user[0].username,
-                        messages:  user[0].messages+1,
-                        voiceTime: user[0].voiceTime,
-                        voiceJoin: user[0].voiceJoin,
-                        score:     user[0].score,
-                        dailyTime: user[0].dailyTime,
-                        dailyClaims: user[0].dailyClaims,
-                        dailyStreak: user[0].dailyStreak,
-                        dailyMax: user[0].dailyMax
+                        userID:    user.userID,
+                        username:  user.username,
+                        messages:  user.messages+1,
+                        voiceTime: user.voiceTime,
+                        voiceJoin: user.voiceJoin,
+                        score:     user.score,
+                        dailyTime: user.dailyTime,
+                        dailyClaims: user.dailyClaims,
+                        dailyStreak: user.dailyStreak,
+                        dailyMax: user.dailyMax
                     };
     
                     //Update score
