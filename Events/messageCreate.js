@@ -30,7 +30,7 @@ module.exports = {
             }
     
             const collection = dbClient.db("Narkos").collection("Users");
-            collection.findOne({userID: message.author.id}).toArray().then(user=>{
+            collection.findOne({userID: message.author.id}).then(user=>{
                 
                 //User in db
                 if (user){

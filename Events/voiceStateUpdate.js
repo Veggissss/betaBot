@@ -51,7 +51,7 @@ module.exports = {
                 }
         
                 const collection = dbClient.db("Narkos").collection("Users");
-                collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
+                collection.findOne({userID: oldMember.member.user.id}).then(user=>{
                     
                     //User in db
                     if (user){
@@ -120,7 +120,7 @@ module.exports = {
         
                 const collection = dbClient.db("Narkos").collection("Users");
                  
-                collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
+                collection.findOne({userID: oldMember.member.user.id}).then(user=>{
                     
                     //User in db
                     if (user){
@@ -207,7 +207,7 @@ module.exports = {
                     }
             
                     const collection = dbClient.db("Narkos").collection("Users");
-                    collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
+                    collection.findOne({userID: oldMember.member.user.id}).then(user=>{
                         
                         //User in db
                         if (user){
@@ -270,7 +270,7 @@ module.exports = {
                     }
             
                     const collection = dbClient.db("Narkos").collection("Users");
-                    collection.findOne({userID: oldMember.member.user.id}).toArray().then(user=>{
+                    collection.findOne({userID: oldMember.member.user.id}).then(user=>{
                         
                         //User in db
                         if (user){
