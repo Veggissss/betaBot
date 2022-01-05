@@ -241,11 +241,11 @@ function editEmbed(embed, i){
 
         const collection = dbClient.db("Narkos").collection("Embeds");
 
-        collection.find({ iteration: i }).toArray().then(embeds => {
+        collection.findOne({ iteration: i }).then(embeds => {
 
-            if (embeds[0]){
+            if (embeds){
                 //Edit message, send it otherwise
-                statsChannel.messages.fetch({around: embeds[0].id, limit: 1}).then(msg => {
+                statsChannel.messages.fetch({around: embeds.id, limit: 1}).then(msg => {
                     const fetchedMsg = msg.first();
 
                     if (fetchedMsg != undefined){
@@ -328,11 +328,11 @@ function editEmbed(embed, i){
                                 if (err){
                                     console.log("Error updating new iteration!");
                                 }
+                                //Close connection
+                                dbClient.close();   
                             });
                         })
                     }
-                    //Close connection
-                    dbClient.close();
                 });
             }
             else{
