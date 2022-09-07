@@ -15,6 +15,7 @@ const rank_trusted = "491151062019997696";
 const rank_foreigners = "641358849865154581";
 const rank_dj = "451446408827109387";
 
+
 //Global variables
 var guild = null;
 var statsChannel = null;
@@ -240,7 +241,6 @@ function editEmbed(embed, i){
         }
 
         const collection = dbClient.db("Narkos").collection("Embeds");
-
         collection.findOne({ iteration: i }).then(embeds => {
 
             if (embeds){
