@@ -51,7 +51,7 @@ class Client extends Discord.Client {
 }
 
 
-const client = new Client( {allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
+const client = new Client( { partials: ['MESSAGE', 'CHANNEL', 'REACTION'], allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
   intents: [
     Intents.FLAGS.GUILDS, 
     Intents.FLAGS.GUILD_MEMBERS, 
@@ -69,7 +69,6 @@ const client = new Client( {allowedMentions: { parse: ['users', 'roles'], replie
     Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
     Intents.FLAGS.DIRECT_MESSAGE_TYPING
     ]
-}); //Intents? []
+});
 
-//where would you call start()?
 module.exports = client;
