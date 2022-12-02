@@ -1,4 +1,12 @@
+require('dotenv').config();
+
 const { MongoClient } = require('mongodb');
+
+/*
+    .env file should contain:
+    - DISCORDTOKEN
+    - MONGOPASSWORD
+*/
 
 //Mongodb
 const dbPass = process.env.MONGOPASSWORD;
@@ -22,7 +30,7 @@ const rankDj = "451446408827109387";
 
 const rankRewards = [rankDj, rankForeigners, rankTrusted, rankMafia, rankDelta, rankTop];
 
-//Channels that gives 0 points
+//Voice and msg channels that gives 0 points
 const afkChannels = ["451371568577249281"];
 
 /*
@@ -71,6 +79,10 @@ function getRankRewards() {
     return rankRewards;
 }
 
+function getDiscordToken() {
+    return process.env.DISCORDTOKEN;
+}
+
 module.exports = {
-    getDatabaseClient, getAfkChannels, getGuildId, getScoreboardChannelId, getRankRewards
+    getDiscordToken, getDatabaseClient, getAfkChannels, getGuildId, getScoreboardChannelId, getRankRewards
 };

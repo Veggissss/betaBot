@@ -1,7 +1,9 @@
-require('dotenv').config();
-
+//Import local
 const { sendEmbed, calculateScore, editDailyEmbed } = require('../embed.js');
-const dbClient = require('../config.js').getDatabaseClient();
+const config = require('../config.js');
+
+const dbClient = config.getDatabaseClient();
+const afkChannels = config.getAfkChannels();
 
 module.exports = {
     name: 'messageCreate',
@@ -13,6 +15,11 @@ module.exports = {
         //DMs
         if (message.channel.type == "dm") {
             console.log(message.content);
+            return;
+        }
+
+        if (afkChannels.includes(message.channel.id)){
+            console.log("Ignoring message");
             return;
         }
 

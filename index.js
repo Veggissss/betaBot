@@ -1,18 +1,19 @@
 //Author Veggissss
 //Calculates time spent in vc and the amount messages sendt per user
-require('dotenv').config();
 
 //Import the created client object
 const client = require('./client.js');
 const { sendEmbed, calculateScore, editDailyEmbed } = require('./embed.js');
 client.start();
 
+const config = require('./config.js');
+
 //Mongodb
-const dbClient = require('./config.js').getDatabaseClient();
+const dbClient = config.getDatabaseClient();
 
 //Button interaction
 client.on('interactionCreate', async interaction => {
-	if (interaction.isCommand()){
+    if (interaction.isCommand()) {
         const command = client.commands.get(interaction.commandName);
         if (!command) return;
 
@@ -23,23 +24,23 @@ client.on('interactionCreate', async interaction => {
             await interaction.reply({ content: 'There was an error while executing this command!', ephemeral: true });
         }
     }
-    else if (interaction.isButton()){
+    else if (interaction.isButton()) {
         //console.log(interaction);
-        if (interaction.customId == "sortByScore"){
-            sendEmbed(client, sort = {score: -1} );
+        if (interaction.customId == "sortByScore") {
+            sendEmbed(client, sort = { score: -1 });
         }
-        else if (interaction.customId == "sortByMsg"){
-            sendEmbed(client, sort = {messages: -1} );
+        else if (interaction.customId == "sortByMsg") {
+            sendEmbed(client, sort = { messages: -1 });
         }
-        else if (interaction.customId == "sortByHrs"){
-            sendEmbed(client, sort = {voiceTime: -1} );
+        else if (interaction.customId == "sortByHrs") {
+            sendEmbed(client, sort = { voiceTime: -1 });
         }
 
         //Update the username
-        else if (interaction.customId == "updateName"){
+        else if (interaction.customId == "updateName") {
             dbClient.connect(err => {
                 //if (err) throw err;
-                if (err){
+                if (err) {
                     console.log("Could not connect to db in index.js");
                     console.log(err);
                     return;
@@ -47,35 +48,35 @@ client.on('interactionCreate', async interaction => {
 
                 const collection = dbClient.db("Narkos").collection("Users");
 
-                collection.updateOne({ userID: interaction.user.id }, { $set: { username: interaction.user.username } }, function(err, res) {
+                collection.updateOne({ userID: interaction.user.id }, { $set: { username: interaction.user.username } }, function (err, res) {
                     //if (err) throw err;
-                    if (err){
+                    if (err) {
                         console.log("Could not updateOne in db at index.js");
                         console.log(err);
                         return;
                     }
 
-                    collection.find({userID: interaction.user.id}).toArray().then(user=>{
+                    collection.find({ userID: interaction.user.id }).toArray().then(user => {
                         sendEmbed(client);
 
-                        editDailyEmbed(client,interaction.user.id, "Updated username!");
+                        editDailyEmbed(client, interaction.user.id, "Updated username!");
                     });
                 });
             })
         }
 
-        else if (interaction.customId == "claimDaily"){
+        else if (interaction.customId == "claimDaily") {
             dbClient.connect(err => {
                 //if (err) throw err;
-                if (err){
+                if (err) {
                     console.log("Could not connect to db in index.js; claimDaily");
                     console.log(err);
                     return;
                 }
-                
+
                 const collection = dbClient.db("Narkos").collection("Users");
-                collection.findOne({ userID: interaction.user.id}).then(user => {
-                    if (!user){
+                collection.findOne({ userID: interaction.user.id }).then(user => {
+                    if (!user) {
                         console.log(`Could not find user: ${interaction.user.id} in db!`);
                         return;
                     }
@@ -83,71 +84,71 @@ client.on('interactionCreate', async interaction => {
                     var now = new Date().getTime();
                     const milliday = 86400000;
 
-                    var dailyScore = Math.round(50 * (1 + Math.log10(1+Math.max(user.dailyMax, user.dailyStreak+1))));
+                    var dailyScore = Math.round(50 * (1 + Math.log10(1 + Math.max(user.dailyMax, user.dailyStreak + 1))));
 
                     sendEmbed(client);
 
                     //Claim
-                    if (now - user.dailyTime > (milliday) && now - user.dailyTime < (2*milliday)){
+                    if (now - user.dailyTime > (milliday) && now - user.dailyTime < (2 * milliday)) {
                         console.log(`${user.username} claimed his/her daily reward! And is on a streak of:`);
-                        collection.updateOne({ userID: interaction.user.id }, { $set: { score: calculateScore(user), dailyTime: now, dailyStreak: user.dailyStreak+1, dailyClaims: user.dailyClaims+1, dailyMax: Math.max(user.dailyMax, user.dailyStreak+1)}}, function(err, res){
-                            if (err){
+                        collection.updateOne({ userID: interaction.user.id }, { $set: { score: calculateScore(user), dailyTime: now, dailyStreak: user.dailyStreak + 1, dailyClaims: user.dailyClaims + 1, dailyMax: Math.max(user.dailyMax, user.dailyStreak + 1) } }, function (err, res) {
+                            if (err) {
                                 console.log(`Could not update daily for user: ${user.username}.\n${err}`);
                                 return;
                             }
-                            editDailyEmbed(client,interaction.user.id, `${user.username} got \`${dailyScore}\` points from the daily reward!`);
+                            editDailyEmbed(client, interaction.user.id, `${user.username} got \`${dailyScore}\` points from the daily reward!`);
                         })
                     }
                     //Cooldown
-                    else if (now - user.dailyTime < milliday){
+                    else if (now - user.dailyTime < milliday) {
                         console.log(`${user.username} tried to claim his/her daily reward, but is still on cooldown`);
-                        editDailyEmbed(client,interaction.user.id, "Daily reward is still on cooldown!");
+                        editDailyEmbed(client, interaction.user.id, "Daily reward is still on cooldown!");
                         return;
                     }
                     //Lost Streak
-                    else{
+                    else {
                         console.log(`${user.username} claimed his/her daily reward! But the streak has been lost`);
-                        
-                        collection.updateOne({ userID: interaction.user.id }, { $set: { score: user.score+dailyScore, dailyClaims: user.dailyClaims+1, dailyTime: now, dailyStreak: 1, dailyMax: Math.max(user.dailyMax, user.dailyStreak+1) }}, function(err, res){
-                            if (err){
+
+                        collection.updateOne({ userID: interaction.user.id }, { $set: { score: user.score + dailyScore, dailyClaims: user.dailyClaims + 1, dailyTime: now, dailyStreak: 1, dailyMax: Math.max(user.dailyMax, user.dailyStreak + 1) } }, function (err, res) {
+                            if (err) {
                                 console.log(`Could not update daily for user: ${user.username}.\n${err}`);
                                 return;
                             }
 
-                            if (user.dailyClaims <= 7){
-                                editDailyEmbed(client,interaction.user.id, `${user.username} got ${dailyScore} points!`);
+                            if (user.dailyClaims <= 7) {
+                                editDailyEmbed(client, interaction.user.id, `${user.username} got ${dailyScore} points!`);
                             }
-                            else{
-                                editDailyEmbed(client,interaction.user.id, `Looks like you lost your streak ${user.username}!\nAt least you got \`${dailyScore}\` points!`);
+                            else {
+                                editDailyEmbed(client, interaction.user.id, `Looks like you lost your streak ${user.username}!\nAt least you got \`${dailyScore}\` points!`);
                             }
                         })
                     }
                 })
             })
         }
-        else if (interaction.customId == "showStats"){
+        else if (interaction.customId == "showStats") {
             dbClient.connect(err => {
                 //if (err) throw err;
-                if (err){
+                if (err) {
                     console.log("Could not connect to db in index.js; showstats");
                     console.log(err);
                     return;
                 }
-                
+
                 const collection = dbClient.db("Narkos").collection("Users");
-                collection.findOne({ userID: interaction.user.id}).then(user => {
-                    if (!user){
+                collection.findOne({ userID: interaction.user.id }).then(user => {
+                    if (!user) {
                         console.log(`Could not find user: ${interaction.user.id} in db!`);
                         return;
                     }
-                    var voiceHour= Math.round((user.voiceTime/1000/60/60)*10)/10;
-                    editDailyEmbed(client,interaction.user.id, `${user.username} has \`${voiceHour}\` hrs in voice chat.\nHas sent a total of \`${user.messages}\` messages.\nAnd has a current score of \`${user.score}\`!`);
+                    var voiceHour = Math.round((user.voiceTime / 1000 / 60 / 60) * 10) / 10;
+                    editDailyEmbed(client, interaction.user.id, `${user.username} has \`${voiceHour}\` hrs in voice chat.\nHas sent a total of \`${user.messages}\` messages.\nAnd has a current score of \`${user.score}\`!`);
                 })
             })
         }
     }
-    else if (interaction.isSelectMenu()){
-        if (interaction.customId == "selectPage"){
+    else if (interaction.isSelectMenu()) {
+        if (interaction.customId == "selectPage") {
             if (!interaction.values[0]) return;
 
             //eg page 1 = index 0
@@ -158,4 +159,4 @@ client.on('interactionCreate', async interaction => {
 });
 
 //Login to the discord API
-client.login(process.env.DISCORDTOKEN);
+client.login(config.getDiscordToken());
