@@ -1,16 +1,13 @@
 require('dotenv').config();
 
-const { MongoClient } = require('mongodb')
-
 //Import local
 const { sendEmbed, calculateScore, editDailyEmbed } = require('../embed.js');
 
-//Mongodb
-const dbPass = process.env.MONGOPASS;
-const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const config = require('../config.js');
 
-//Global Variables
-const afkChannels = process.env.AFKID;                                //Channels that gives 0 points
+//Mongodb
+const dbClient = config.getDatabaseClient();
+const afkChannels = config.getAfkChannels();
 
 //Update bootime
 const dt = new Date();
@@ -19,8 +16,6 @@ const bootTime = dt.getTime();
 module.exports = {
 	name: 'voiceStateUpdate',
 	execute(oldMember, newMember, client) {
-        const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-        
         let username = oldMember.member.user.username;
 
         let oldVoice = oldMember.channelId; 
@@ -70,9 +65,6 @@ module.exports = {
 
                         collection.updateOne({userID: oldMember.member.user.id}, newValues).then(res =>{
                             //console.log("Updated: "+time);
-                            
-                            //Close db connection
-                            dbClient.close();
                         });
                     }
                     else{
@@ -99,9 +91,6 @@ module.exports = {
                             return;
                         }
                         //console.log(`Added ${oldMember.member.user.username} to db!`);
-                        
-                        //Close db connection
-                        dbClient.close();
                     });
                 }
             })
@@ -168,9 +157,6 @@ module.exports = {
                         //Write to db
                         collection.updateOne({userID: oldMember.member.user.id}, { $set: userEntry }).then(res =>{
                             //console.log("Updated: "+oldMember.member.user.id);
-                            
-                            //Close db connection
-                            dbClient.close();
                         });
                         
 
@@ -183,7 +169,6 @@ module.exports = {
                         editDailyEmbed(client,oldMember.member.user.id, msg = `${userEntry.username} was in vc for \`${voiceMins}\` min.\n${userEntry.username} has now a total of \`${voiceHour}\` hrs.`);
                     }
                     else {
-                        dbClient.close();
                         console.log(`User not found in db: ${oldMember.member.user.id}`);
                     }
                 })
@@ -244,14 +229,10 @@ module.exports = {
 
                             //Write to db
                             collection.updateOne({userID: oldMember.member.user.id}, { $set: userEntry }).then(res =>{
-                                //console.log("Updated: "+oldMember.member.user.id);
-                                
-                                //Close db connection
-                                dbClient.close();
+                                //console.log("Updated: "+ oldMember.member.user.id);
                             });
                         }
                         else{
-                            dbClient.close();
                             console.log(`User not found, ID: ${oldMember.member.user.id}`);
                         }
                     })
@@ -285,14 +266,10 @@ module.exports = {
                             } };
 
                             collection.updateOne({userID: oldMember.member.user.id}, newValues).then(res =>{
-                                //console.log("Updated: "+oldMember.member.user.id);
-                                
-                                //Close db connection
-                                dbClient.close();
+                                //console.log("Updated: "+ oldMember.member.user.id);
                             });
                         }
                         else{
-                            dbClient.close();
                             console.log(`User could not be found ID: ${oldMember.member.user.id}`);
                         }
                     })

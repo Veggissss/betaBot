@@ -1,41 +1,31 @@
 require('dotenv').config();
 
-const Discord = require('discord.js')
-
-const { MongoClient } = require('mongodb');
-const { MessageActionRow, MessageButton, MessageSelectMenu } = require('discord.js');
-
-const GuildID = process.env.SERVERID;                        //Discord server ID
-const ChannelID = process.env.CHANNELID;                      //Channel where scoreboard should be posted
-
-//Rank ids:
-const rank_delta = "491506230355951636";
-const rank_mafia = "693894552179834891";
-const rank_trusted = "491151062019997696";
-const rank_foreigners = "641358849865154581";
-const rank_dj = "451446408827109387";
-
+const { Client,MessageEmbed,MessageActionRow, MessageButton, MessageSelectMenu } = require('discord.js');
 
 //Global variables
 var guild = null;
 var statsChannel = null;
 
+const config = require('./config.js');
+
 //Mongodb
-const dbPass = process.env.MONGOPASS;
-const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const dbClient = config.getDatabaseClient();
+const GuildID = config.getGuildId();
+const scoreboardChannelId = config.getScoreboardChannelId();
+
+const rankRewards = config.getRankRewards();
 
 var currentSort = {score: -1};
 var currentPage = 0;
 
 //Sends and updates leaderboard and gives out ranks
-function sendEmbed(client = new Discord.Client(), sort = currentSort, page = currentPage){
-    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+function sendEmbed(client = new Client(), sort = currentSort, page = currentPage){
     currentSort = sort;
     currentPage = page;
 
     //Update global variables
     guild = client.guilds.cache.get(GuildID);
-    statsChannel = client.channels.cache.get(ChannelID);
+    statsChannel = client.channels.cache.get(scoreboardChannelId);
 
     //Get serverIcon
     var serverIcon = guild.iconURL({ dynamic: true, size: 256 });
@@ -59,17 +49,16 @@ function sendEmbed(client = new Discord.Client(), sort = currentSort, page = cur
             users = users.slice(offset, offset+30);
         
             leaderboardEmbed(users, page);
-            dbClient.close();
         });
     })
 
     //Send rewards embed
-    const rewards = new Discord.MessageEmbed()
+    const rewards = new MessageEmbed()
     .setAuthor(`Rewards for Narkos`)
     .setColor(getRandomColor())
     .setThumbnail(serverIcon)
     .addFields(
-        { name: 'Reward',           value: `<@&${"711141574964412416"}>\n<@&${rank_delta}>\n<@&${rank_mafia}>\n<@&${rank_trusted}>\n<@&${rank_foreigners}>\n<@&${rank_dj}>`, inline: true },
+        { name: 'Reward',           value: `<@&${rankRewards[5]}>\n<@&${rankRewards[4]}>\n<@&${rankRewards[3]}>\n<@&${rankRewards[2]}>\n<@&${rankRewards[1]}>\n<@&${rankRewards[0]}>`, inline: true },
         { name: 'Required Score',   value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
     .setFooter('Updates when user leaves vc!');
 
@@ -79,8 +68,6 @@ function sendEmbed(client = new Discord.Client(), sort = currentSort, page = cur
 
 //Sees if the top user has changed
 function checkTop(){
-    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
     dbClient.connect(err => {
         //if (err) throw err;
         if (err){
@@ -98,7 +85,7 @@ function checkTop(){
             dbClient.db("Narkos").collection("Top").findOne().then(top => {
                 //console.log(top);
                 if (top.userID != userTop.userID){
-                    let role = guild.roles.cache.find(role => role.id === "711141574964412416");
+                    let role = guild.roles.cache.find(role => role.id === rankRewards[rankRewards.length-1]);
 
                     removeRole(top.userID,role);
                     giveRole(userTop.userID,role);
@@ -120,11 +107,7 @@ function checkTop(){
 
                     dbClient.db("Narkos").collection("Top").updateOne({userID: top.userID}, newValues, function(err, res) {
                         if (err) throw err;
-                        dbClient.close();
                     })
-                }
-                else{
-                    dbClient.close();
                 }
             });
         });
@@ -151,7 +134,7 @@ function leaderboardEmbed(users, page = 0){
     }
  
     //Top leaderboard
-    const leaderboard = new Discord.MessageEmbed()
+    const leaderboard = new MessageEmbed()
         .setAuthor(`Leaderboard for Narkos   /   ${guild.memberCount} members`)    //servericon or ,client.user.avatarURL()
         .setColor(getRandomColor()) //.setColor(0x51267)
         .addFields(
@@ -168,9 +151,7 @@ function editDailyEmbed(client, user_id, msg = "No message provided"){
     const milliday = 86400000;
 
     guild = client.guilds.cache.get(GuildID);
-    statsChannel = client.channels.cache.get(ChannelID);
-
-    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
+    statsChannel = client.channels.cache.get(scoreboardChannelId);
 
     dbClient.connect(err => {
         //if (err) throw err;
@@ -189,7 +170,7 @@ function editDailyEmbed(client, user_id, msg = "No message provided"){
             }
 
             guild.members.fetch(user.userID).then(member =>{
-                let userCard = new Discord.MessageEmbed()
+                let userCard = new MessageEmbed()
                 .setAuthor(`Daily Rewards Stats`)
                 .setColor(getRandomColor())
                 .setDescription(msg)
@@ -201,18 +182,18 @@ function editDailyEmbed(client, user_id, msg = "No message provided"){
                 .setFooter('Next claim available')
                 .setTimestamp(user.dailyTime + milliday);
 
-                let rank = rank_dj;
+                let rank = rankRewards[0];
                 if (user.score >= 10000){
-                    rank = rank_delta;
+                    rank = rankRewards[4];
                 }
                 else if (user.score >= 5000){
-                    rank = rank_mafia;
+                    rank = rankRewards[3];
                 }
                 else if (user.score >= 2000){
-                    rank = rank_trusted;
+                    rank = rankRewards[2];
                 }
                 else if (user.score >= 500){
-                    rank = rank_foreigners;
+                    rank = rankRewards[1];
                 }
         
                 let role = guild.roles.cache.find(role => role.id === rank);
@@ -223,14 +204,11 @@ function editDailyEmbed(client, user_id, msg = "No message provided"){
                 //-1 is reseved for userCards
                 editEmbed(userCard, -1);
             })
-            dbClient.close();
         })
     })
 }
 
 function editEmbed(embed, i){
-    const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
     //Connect to db
     dbClient.connect(err => {
         //if (err) throw err;
@@ -328,8 +306,6 @@ function editEmbed(embed, i){
                                 if (err){
                                     console.log("Error updating new iteration!");
                                 }
-                                //Close connection
-                                dbClient.close();   
                             });
                         })
                     }
@@ -346,8 +322,6 @@ function editEmbed(embed, i){
                             console.log(err);
                             return;
                         }
-                        //Close db connection
-                        dbClient.close();
                     });
                 });
             }

@@ -2,19 +2,13 @@
 //Calculates time spent in vc and the amount messages sendt per user
 require('dotenv').config();
 
-const { MongoClient } = require('mongodb');
-
-//Import local
-const token = process.env.TOKEN;
-
 //Import the created client object
 const client = require('./client.js');
 const { sendEmbed, calculateScore, editDailyEmbed } = require('./embed.js');
 client.start();
 
 //Mongodb
-const dbPass = process.env.MONGOPASS;
-const uri = `mongodb+srv://Admin:${dbPass}@narkos.axdie.mongodb.net/myFirstDatabase?retryWrites=true&w=majority`;
+const dbClient = require('./config.js').getDatabaseClient();
 
 //Button interaction
 client.on('interactionCreate', async interaction => {
@@ -43,8 +37,6 @@ client.on('interactionCreate', async interaction => {
 
         //Update the username
         else if (interaction.customId == "updateName"){
-            const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
             dbClient.connect(err => {
                 //if (err) throw err;
                 if (err){
@@ -67,15 +59,12 @@ client.on('interactionCreate', async interaction => {
                         sendEmbed(client);
 
                         editDailyEmbed(client,interaction.user.id, "Updated username!");
-                        dbClient.close();
                     });
                 });
             })
         }
 
         else if (interaction.customId == "claimDaily"){
-            const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
             dbClient.connect(err => {
                 //if (err) throw err;
                 if (err){
@@ -107,15 +96,12 @@ client.on('interactionCreate', async interaction => {
                                 return;
                             }
                             editDailyEmbed(client,interaction.user.id, `${user.username} got \`${dailyScore}\` points from the daily reward!`);
-
-                            dbClient.close();
                         })
                     }
                     //Cooldown
                     else if (now - user.dailyTime < milliday){
                         console.log(`${user.username} tried to claim his/her daily reward, but is still on cooldown`);
                         editDailyEmbed(client,interaction.user.id, "Daily reward is still on cooldown!");
-                        dbClient.close();
                         return;
                     }
                     //Lost Streak
@@ -134,16 +120,12 @@ client.on('interactionCreate', async interaction => {
                             else{
                                 editDailyEmbed(client,interaction.user.id, `Looks like you lost your streak ${user.username}!\nAt least you got \`${dailyScore}\` points!`);
                             }
-
-                            dbClient.close();
                         })
                     }
                 })
             })
         }
         else if (interaction.customId == "showStats"){
-            const dbClient = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology: true });
-
             dbClient.connect(err => {
                 //if (err) throw err;
                 if (err){
@@ -160,7 +142,6 @@ client.on('interactionCreate', async interaction => {
                     }
                     var voiceHour= Math.round((user.voiceTime/1000/60/60)*10)/10;
                     editDailyEmbed(client,interaction.user.id, `${user.username} has \`${voiceHour}\` hrs in voice chat.\nHas sent a total of \`${user.messages}\` messages.\nAnd has a current score of \`${user.score}\`!`);
-                    dbClient.close();
                 })
             })
         }
@@ -176,7 +157,5 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-
-
 //Login to the discord API
-client.login(token);
+client.login(process.env.DISCORDTOKEN);
