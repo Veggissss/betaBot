@@ -10,6 +10,10 @@ app.listen(PORT, () => {
   console.log(`server started on port ${PORT}`);
 });
 
+app.get('/', (req, res) => {
+  res.send('Success!');
+});
+
 //Import the created client object
 const client = require('./client.js');
 const { sendEmbed, calculateScore, editDailyEmbed } = require('./embed.js');
