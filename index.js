@@ -1,6 +1,15 @@
 //Author Veggissss
 //Calculates time spent in vc and the amount messages sendt per user
 
+//Start server for Render
+const express = require("express");
+const app = express();
+const PORT = process.env.PORT || 3030;
+
+app.listen(PORT, () => {
+  console.log(`server started on port ${PORT}`);
+});
+
 //Import the created client object
 const client = require('./client.js');
 const { sendEmbed, calculateScore, editDailyEmbed } = require('./embed.js');
