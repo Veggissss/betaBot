@@ -1,6 +1,6 @@
 //Make a discord client with loaded commands and events
 const Discord = require('discord.js');
-const { Intents } = require('discord.js');
+const { Intents, GatewayIntentBits, Partials } = require('discord.js');
 const fs = require('fs');
 
 
@@ -51,23 +51,23 @@ class Client extends Discord.Client {
 }
 
 
-const client = new Client( { partials: ['MESSAGE', 'CHANNEL', 'REACTION'], allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
+const client = new Client( { partials: [Partials.Channel, Partials.Message, Partials.Reaction, Partials.GuildMember ], allowedMentions: { parse: ['users', 'roles'], repliedUser: true },
   intents: [
-    Intents.FLAGS.GUILDS, 
-    Intents.FLAGS.GUILD_MEMBERS, 
-    Intents.FLAGS.GUILD_BANS, 
-    Intents.FLAGS.GUILD_EMOJIS_AND_STICKERS, 
-    Intents.FLAGS.GUILD_INTEGRATIONS, 
-    Intents.FLAGS.GUILD_WEBHOOKS, 
-    Intents.FLAGS.GUILD_INVITES, 
-    Intents.FLAGS.GUILD_VOICE_STATES, 
-    Intents.FLAGS.GUILD_PRESENCES, 
-    Intents.FLAGS.GUILD_MESSAGES, 
-    Intents.FLAGS.GUILD_MESSAGE_REACTIONS, 
-    Intents.FLAGS.GUILD_MESSAGE_TYPING, 
-    Intents.FLAGS.DIRECT_MESSAGES, 
-    Intents.FLAGS.DIRECT_MESSAGE_REACTIONS,
-    Intents.FLAGS.DIRECT_MESSAGE_TYPING
+    GatewayIntentBits.Guilds, 
+    GatewayIntentBits.GuildMembers, 
+    GatewayIntentBits.GuildEmojisAndStickers, 
+    GatewayIntentBits.GuildIntegrations, 
+    GatewayIntentBits.GuildWebhooks, 
+    GatewayIntentBits.GuildInvites, 
+    GatewayIntentBits.GuildVoiceStates, 
+    GatewayIntentBits.GuildPresences, 
+    GatewayIntentBits.GuildMessages, 
+    GatewayIntentBits.GuildMessageReactions, 
+    GatewayIntentBits.GuildMessageTyping, 
+    GatewayIntentBits.DirectMessages, 
+    GatewayIntentBits.DirectMessageReactions,
+    GatewayIntentBits.DirectMessageTyping,
+    GatewayIntentBits.GuildModeration
     ]
 });
 

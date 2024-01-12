@@ -147,7 +147,7 @@ client.on('interactionCreate', async interaction => {
             })
         }
     }
-    else if (interaction.isSelectMenu()) {
+    else if (interaction.isStringSelectMenu()) {
         if (interaction.customId == "selectPage") {
             if (!interaction.values[0]) return;
 

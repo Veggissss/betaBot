@@ -1,4 +1,4 @@
-const { Client, MessageEmbed, MessageActionRow, MessageButton, MessageSelectMenu } = require('discord.js');
+const { Client, EmbedBuilder, ActionRowBuilder, ButtonBuilder, StringSelectMenuBuilder, ButtonStyle } = require('discord.js');
 
 //Global variables
 var guild = null;
@@ -17,6 +17,8 @@ const rankRewards = config.getRankRewards();
 var currentSort = { score: -1 };
 var currentPage = 0;
 
+var rewardsEmbedCooldown = false;
+
 //Sends and updates leaderboard and gives out ranks
 function sendEmbed(client = new Client(), sort = currentSort, page = currentPage) {
     currentSort = sort;
@@ -27,7 +29,7 @@ function sendEmbed(client = new Client(), sort = currentSort, page = currentPage
     statsChannel = client.channels.cache.get(scoreboardChannelId);
 
     //Get serverIcon
-    var serverIcon = guild.iconURL({ dynamic: true, size: 256 });
+    var serverIcon = guild.iconURL({ extension: "png", size: 256 });
 
     //Check for updated topuser
     checkTop();
@@ -50,19 +52,26 @@ function sendEmbed(client = new Client(), sort = currentSort, page = currentPage
             leaderboardEmbed(users, page);
         });
     })
-
-    //Send rewards embed
-    const rewards = new MessageEmbed()
-        .setAuthor(`Rewards for Narkos`)
+  
+    if (!rewardsEmbedCooldown){
+        rewardsEmbedCooldown = true;
+        //Send rewards embed
+        const rewards = new EmbedBuilder()
+        .setAuthor({name: `Rewards for Narkos`})
         .setColor(getRandomColor())
         .setThumbnail(serverIcon)
         .addFields(
             { name: 'Reward', value: `<@&${rankRewards[5]}>\n<@&${rankRewards[4]}>\n<@&${rankRewards[3]}>\n<@&${rankRewards[2]}>\n<@&${rankRewards[1]}>\n<@&${rankRewards[0]}>`, inline: true },
             { name: 'Required Score', value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
-        .setFooter('Updates when user leaves vc!');
+        .setFooter({text: 'Updates when user leaves vc!'});
 
-    //Index 0 is rewards
-    editEmbed(rewards, 0);
+        //Index 0 is rewards
+        editEmbed(rewards, 0);
+
+        setTimeout(() => {
+            rewardsEmbedCooldown = false;
+        },60_000)
+    }
 }
 
 //Sees if the top user has changed
@@ -135,14 +144,14 @@ function leaderboardEmbed(users, page = 0) {
     }
 
     //Top leaderboard
-    const leaderboard = new MessageEmbed()
-        .setAuthor(`Leaderboard for Narkos   /   ${guild.memberCount} members`)
+    const leaderboard = new EmbedBuilder()
+        .setAuthor({name: `Leaderboard for Narkos   /   ${guild.memberCount} members`})
         .setColor(getRandomColor())
         .addFields(
             { name: 'Username', value: userNames, inline: true },
             { name: 'Stats', value: userMsgTime, inline: true },
             { name: 'Score', value: userScore, inline: true })
-        .setFooter('Score:  5 points per message  /  30 points per hour');
+        .setFooter({text: 'Score:  5 points per message  /  30 points per hour'});
 
     editEmbed(leaderboard, 1);
 }
@@ -171,16 +180,16 @@ function editDailyEmbed(client, user_id, msg = "No message provided") {
             }
 
             guild.members.fetch(user.userID).then(member => {
-                let userCard = new MessageEmbed()
-                    .setAuthor(`Daily Rewards Stats`)
+                let userCard = new EmbedBuilder()
+                    .setAuthor({name: `Daily Rewards Stats`})
                     .setColor(getRandomColor())
                     .setDescription(msg)
-                    .setThumbnail(member.user.avatarURL({ dynamic: true }))
+                    .setThumbnail(member.user.displayAvatarURL({ extension: "png", size: 256 }))
                     .addFields(
                         { name: 'Daily Claims', value: `\`${user.dailyClaims}\``, inline: true },
                         { name: 'Current Streak', value: `\`${user.dailyStreak}\``, inline: true },
                         { name: 'Highest Streak', value: `\`${user.dailyMax}\``, inline: true }) //,{ name: 'Score',   value: `\`${user.score}\``, inline: false}
-                    .setFooter('Next claim available')
+                    .setFooter({text: 'Next claim available'})
                     .setTimestamp(user.dailyTime + milliday);
 
                 let rank = rankRewards[0];
@@ -221,36 +230,39 @@ function editEmbed(embed, i) {
 
         const collection = dbClient.db("Narkos").collection("Embeds");
         collection.findOne({ iteration: i }).then(embeds => {
-
             if (embeds) {
                 //Edit message, send it otherwise
                 statsChannel.messages.fetch({ around: embeds.id, limit: 1 }).then(msg => {
-                    const fetchedMsg = msg.first();
+                    let fetchedMsg = msg.first();
+                    if (fetchedMsg != undefined && fetchedMsg.id !== embeds.id){
+                        fetchedMsg = undefined;
+                        console.log("Not equal");
+                    }
 
                     if (fetchedMsg != undefined) {
                         //Add buttons for sorting options
                         if (i == 1) {
-                            const buttonMsg = new MessageButton()
+                            const buttonMsg = new ButtonBuilder()
                                 .setCustomId('sortByMsg')
                                 .setLabel('Messages')
-                                .setStyle('PRIMARY');
+                                .setStyle(ButtonStyle.Primary);
 
-                            const buttonScore = new MessageButton()
+                            const buttonScore = new ButtonBuilder()
                                 .setCustomId('sortByScore')
                                 .setLabel('Score')
-                                .setStyle('DANGER');
+                                .setStyle(ButtonStyle.Danger);
 
-                            const buttonHrs = new MessageButton()
+                            const buttonHrs = new ButtonBuilder()
                                 .setCustomId('sortByHrs')
                                 .setLabel('Hours')
-                                .setStyle('SUCCESS');
+                                .setStyle(ButtonStyle.Success);
 
-                            const buttonRepo = new MessageButton()
+                            const buttonRepo = new ButtonBuilder()
                                 .setLabel('Git')
                                 .setURL("https://github.com/Veggissss/betaBot")
-                                .setStyle('LINK');
+                                .setStyle(ButtonStyle.Link);
 
-                            const selectPage = new MessageSelectMenu()
+                            const selectPage = new StringSelectMenuBuilder()
                                 .setCustomId('selectPage')
                                 .setPlaceholder('Change page')
                                 .addOptions([
@@ -266,29 +278,29 @@ function editEmbed(embed, i) {
                                     },
                                 ]);
 
-                            const rowButtons = new MessageActionRow().addComponents(buttonHrs, buttonMsg, buttonScore, buttonRepo);
-                            const rowMenu = new MessageActionRow().addComponents(selectPage);
-
-                            fetchedMsg.edit({ embeds: [embed], components: [rowButtons, rowMenu] });
+                            const rowButtons = new ActionRowBuilder().addComponents(buttonHrs, buttonMsg, buttonScore, buttonRepo);
+                            const rowMenu = new ActionRowBuilder().addComponents(selectPage);
+                            
+                            fetchedMsg.edit({ embeds: [embed], components: [rowButtons, rowMenu] }).then(msg => console.log(`Updated the content of a message `)).catch(console.error);;
                         }
                         //User stat card
                         else if (i == -1) {
-                            const buttonName = new MessageButton()
+                            const buttonName = new ButtonBuilder()
                                 .setCustomId('updateName')
                                 .setLabel('Update Username')
-                                .setStyle('DANGER');
+                                .setStyle(ButtonStyle.Danger);
 
-                            const buttonStats = new MessageButton()
+                            const buttonStats = new ButtonBuilder()
                                 .setCustomId('showStats')
                                 .setLabel('Show My Stats')
-                                .setStyle('PRIMARY');
+                                .setStyle(ButtonStyle.Primary);
 
-                            const buttonDaily = new MessageButton()
+                            const buttonDaily = new ButtonBuilder()
                                 .setCustomId('claimDaily')
                                 .setLabel('Claim Daily')
-                                .setStyle('SUCCESS');
+                                .setStyle(ButtonStyle.Success);
 
-                            const row = new MessageActionRow()
+                            const row = new ActionRowBuilder()
                                 .addComponents(
                                     buttonDaily, buttonStats, buttonName
                                 );
@@ -308,7 +320,7 @@ function editEmbed(embed, i) {
                                     console.log("Error updating new iteration!");
                                 }
                             });
-                        })
+                        }).catch(err => console.log(err));
                     }
                 });
             }
@@ -324,7 +336,7 @@ function editEmbed(embed, i) {
                             return;
                         }
                     });
-                });
+                }).catch(err => console.log(err));
             }
         })
     })
@@ -347,7 +359,9 @@ function giveRole(userID, role) {
         if (member == null) {
             return;
         }
-        member.roles.add(role);
+        member.roles.add(role).catch(err => {
+            console.log(err);
+        });
     })
 }
 

@@ -13,8 +13,9 @@ module.exports = {
         }
 
         //DMs
-        if (message.channel.type == "dm") {
+        if (message.guild === null) {
             console.log(message.content);
+            sendEmbed(client);
             return;
         }
 
