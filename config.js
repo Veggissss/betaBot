@@ -55,7 +55,9 @@ const rankForeigners = "641358849865154581";
 const rankDj = "451446408827109387";
 
 //Rank id with the corresponding score requirement
-const rankRewards = [(rankDj,0), (rankForeigners,1000), (rankMafia,5000), (rankDelta,10000), (rankTop, "Rank 1")];
+const rankRewards = [
+    [rankDj, 0], [rankForeigners, 1000], [rankMafia, 5000], [rankDelta, 10000], [rankTop, "Rank 1"]
+];
 
 //Voice and msg channels that gives 0 points
 const afkChannels = ["451371568577249281"];

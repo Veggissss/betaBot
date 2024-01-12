@@ -61,7 +61,9 @@ function sendEmbed(client = new Client(), sort = currentSort, page = currentPage
         
         let rewardFieldValue = "";
         let rewardScoreValue = "";
-        for (let [id,score] of rankRewards.reverse().entries()){
+        for (let [id,score] of rankRewards.reverse()){
+            console.log(id);
+            console.log(score);
             rewardFieldValue += `<@&${id}>\n`;
             rewardScoreValue += `${score}\n`;
         }
@@ -204,7 +206,7 @@ function editDailyEmbed(client, user_id, msg = "No message provided") {
                     .setTimestamp(user.dailyTime + milliday);
 
                 let rank;
-                for (let [id,score] of rankRewards.entries()){
+                for (let [id,score] of rankRewards){
                     if (Number.isFinite(score)){
                         if (user.score >= score){
                             rank = id;
