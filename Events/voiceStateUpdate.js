@@ -42,7 +42,7 @@ module.exports = {
                     return;
                 }
 
-                const collection = dbClient.db("Narkos").collection("Users");
+                const collection = dbClient.db(config.getDbServerName()).collection("Users");
                 collection.findOne({ userID: oldMember.member.user.id }).then(user => {
 
                     //User in db
@@ -106,7 +106,7 @@ module.exports = {
                     return;
                 }
 
-                const collection = dbClient.db("Narkos").collection("Users");
+                const collection = dbClient.db(config.getDbServerName()).collection("Users");
 
                 collection.findOne({ userID: oldMember.member.user.id }).then(user => {
 
@@ -190,7 +190,7 @@ module.exports = {
                         return;
                     }
 
-                    const collection = dbClient.db("Narkos").collection("Users");
+                    const collection = dbClient.db(config.getDbServerName()).collection("Users");
                     collection.findOne({ userID: oldMember.member.user.id }).then(user => {
 
                         //User in db
@@ -249,7 +249,7 @@ module.exports = {
                         return;
                     }
 
-                    const collection = dbClient.db("Narkos").collection("Users");
+                    const collection = dbClient.db(config.getDbServerName()).collection("Users");
                     collection.findOne({ userID: oldMember.member.user.id }).then(user => {
 
                         //User in db

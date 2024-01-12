@@ -33,7 +33,7 @@ module.exports = {
                 return;
             }
 
-            const collection = dbClient.db("Narkos").collection("Users");
+            const collection = dbClient.db(config.getDbServerName()).collection("Users");
             collection.findOne({ userID: message.author.id }).then(user => {
 
                 //User in db

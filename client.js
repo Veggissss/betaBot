@@ -1,6 +1,6 @@
 //Make a discord client with loaded commands and events
 const Discord = require('discord.js');
-const { Intents, GatewayIntentBits, Partials } = require('discord.js');
+const { GatewayIntentBits, Partials } = require('discord.js');
 const fs = require('fs');
 
 

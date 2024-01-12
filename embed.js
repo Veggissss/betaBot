@@ -18,6 +18,7 @@ var currentSort = { score: -1 };
 var currentPage = 0;
 
 var rewardsEmbedCooldown = false;
+var usersCount = 0;
 
 //Sends and updates leaderboard and gives out ranks
 function sendEmbed(client = new Client(), sort = currentSort, page = currentPage) {
@@ -42,9 +43,11 @@ function sendEmbed(client = new Client(), sort = currentSort, page = currentPage
             console.log(err);
             return;
         }
-        const collection = dbClient.db("Narkos").collection("Users");
+        const collection = dbClient.db(config.getDbServerName()).collection("Users");
 
         collection.find().sort(sort).toArray().then(users => {
+            usersCount = users.length;
+
             //User embeds slit up to 30
             const offset = page * 30;
             users = users.slice(offset, offset + 30);
@@ -55,14 +58,22 @@ function sendEmbed(client = new Client(), sort = currentSort, page = currentPage
   
     if (!rewardsEmbedCooldown){
         rewardsEmbedCooldown = true;
+        
+        let rewardFieldValue = "";
+        let rewardScoreValue = "";
+        for (let [id,score] of rankRewards.reverse().entries()){
+            rewardFieldValue += `<@&${id}>\n`;
+            rewardScoreValue += `${score}\n`;
+        }
+        
         //Send rewards embed
         const rewards = new EmbedBuilder()
         .setAuthor({name: `Rewards for Narkos`})
         .setColor(getRandomColor())
         .setThumbnail(serverIcon)
         .addFields(
-            { name: 'Reward', value: `<@&${rankRewards[5]}>\n<@&${rankRewards[4]}>\n<@&${rankRewards[3]}>\n<@&${rankRewards[2]}>\n<@&${rankRewards[1]}>\n<@&${rankRewards[0]}>`, inline: true },
-            { name: 'Required Score', value: "Rank 1\n10 000\n5 000\n2 000\n500\nNone", inline: true })
+            { name: 'Reward', value: rewardFieldValue, inline: true },
+            { name: 'Required Score', value: rewardScoreValue, inline: true })
         .setFooter({text: 'Updates when user leaves vc!'});
 
         //Index 0 is rewards
@@ -84,16 +95,16 @@ function checkTop() {
             return;
         }
 
-        const collection = dbClient.db("Narkos").collection("Users");
+        const collection = dbClient.db(config.getDbServerName()).collection("Users");
 
         collection.find().sort({ score: -1 }).toArray().then(users => {
             const userTop = users[0];
 
             //See if we got a new top rank
-            dbClient.db("Narkos").collection("Top").findOne().then(top => {
+            dbClient.db(config.getDbServerName()).collection("Top").findOne().then(top => {
                 //console.log(top);
                 if (top.userID != userTop.userID) {
-                    let role = guild.roles.cache.find(role => role.id === rankRewards[rankRewards.length - 1]);
+                    let role = guild.roles.cache.find(role => role.id === rankRewards[rankRewards.length - 1][0]);
 
                     removeRole(top.userID, role);
                     giveRole(userTop.userID, role);
@@ -115,7 +126,7 @@ function checkTop() {
                         }
                     };
 
-                    dbClient.db("Narkos").collection("Top").updateOne({ userID: top.userID }, newValues, function (err, res) {
+                    dbClient.db(config.getDbServerName()).collection("Top").updateOne({ userID: top.userID }, newValues, function (err, res) {
                         if (err) throw err;
                     })
                 }
@@ -171,7 +182,7 @@ function editDailyEmbed(client, user_id, msg = "No message provided") {
             return;
         }
 
-        const collection = dbClient.db("Narkos").collection("Users");
+        const collection = dbClient.db(config.getDbServerName()).collection("Users");
 
         collection.findOne({ userID: user_id }).then(user => {
             if (!user) {
@@ -192,25 +203,20 @@ function editDailyEmbed(client, user_id, msg = "No message provided") {
                     .setFooter({text: 'Next claim available'})
                     .setTimestamp(user.dailyTime + milliday);
 
-                let rank = rankRewards[0];
-                if (user.score >= 10000) {
-                    rank = rankRewards[4];
+                let rank;
+                for (let [id,score] of rankRewards.entries()){
+                    if (Number.isFinite(score)){
+                        if (user.score >= score){
+                            rank = id;
+                        }
+                    }
                 }
-                else if (user.score >= 5000) {
-                    rank = rankRewards[3];
+                if (rank){
+                    let role = guild.roles.cache.find(role => role.id === rank);
+                    //console.log(`Gave rank ${role.name} to ${users[i].username}`);
+                    giveRole(user.userID, role);
                 }
-                else if (user.score >= 2000) {
-                    rank = rankRewards[2];
-                }
-                else if (user.score >= 500) {
-                    rank = rankRewards[1];
-                }
-
-                let role = guild.roles.cache.find(role => role.id === rank);
-
-                //console.log(`Gave rank ${role.name} to ${users[i].username}`);
-                giveRole(user.userID, role);
-
+                
                 //-1 is reseved for userCards
                 editEmbed(userCard, -1);
             })
@@ -228,7 +234,7 @@ function editEmbed(embed, i) {
             return;
         }
 
-        const collection = dbClient.db("Narkos").collection("Embeds");
+        const collection = dbClient.db(config.getDbServerName()).collection("Embeds");
         collection.findOne({ iteration: i }).then(embeds => {
             if (embeds) {
                 //Edit message, send it otherwise
@@ -262,26 +268,30 @@ function editEmbed(embed, i) {
                                 .setURL("https://github.com/Veggissss/betaBot")
                                 .setStyle(ButtonStyle.Link);
 
+
+                            const selectOptions = [];
+                            let users = usersCount;
+                            let userCount = 1;
+                            for (let count = 1; (users / 30) > 0 ; count++){
+                                let option = {
+                                    label: `Page ${count}`,
+                                    description: `Show user nr.${userCount}-${userCount+30}`,
+                                    value: `${count}`
+                                };
+                                selectOptions.push(option);
+                                userCount += 30;
+                                users -= 30;
+                            }
+
                             const selectPage = new StringSelectMenuBuilder()
                                 .setCustomId('selectPage')
                                 .setPlaceholder('Change page')
-                                .addOptions([
-                                    {
-                                        label: 'Page 1',
-                                        description: 'Show user nr.1-30!',
-                                        value: '1',
-                                    },
-                                    {
-                                        label: 'Page 2',
-                                        description: 'Show user nr.31-60!',
-                                        value: '2',
-                                    },
-                                ]);
+                                .addOptions(selectOptions);
 
                             const rowButtons = new ActionRowBuilder().addComponents(buttonHrs, buttonMsg, buttonScore, buttonRepo);
                             const rowMenu = new ActionRowBuilder().addComponents(selectPage);
                             
-                            fetchedMsg.edit({ embeds: [embed], components: [rowButtons, rowMenu] }).then(msg => console.log(`Updated the content of a message `)).catch(console.error);;
+                            fetchedMsg.edit({ embeds: [embed], components: [rowButtons, rowMenu] }).then(_ => console.log(`Updated scoreboard`)).catch(console.error);
                         }
                         //User stat card
                         else if (i == -1) {
