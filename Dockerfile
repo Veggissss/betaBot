@@ -1,4 +1,4 @@
-FROM arm32v7/node:16.8.0-alpine
+FROM arm32v7/node:18.16.0-alpine
 ENV NODE_ENV=production
 
 WORKDIR /usr/src/app
