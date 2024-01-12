@@ -21,7 +21,7 @@ Run it using:
 docker pull veggissss/betabot
 
 # Replace the secret enviorment tokens
-docker run --name=BetaBot --restart=unless-stopped -e DISCORDTOKEN=Discord_Bot_Token_Here -e MONGOPASSWORD=Mongo_Token_Here -d betabot:latest
+docker run --name=BetaBot --restart=unless-stopped -e DISCORDTOKEN=Discord_Bot_Token_Here -e MONGOPASSWORD=Mongo_Token_Here -d veggissss/betabot:latest
 
 # Find container id
 docker ps

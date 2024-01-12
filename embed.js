@@ -62,8 +62,6 @@ function sendEmbed(client = new Client(), sort = currentSort, page = currentPage
         let rewardFieldValue = "";
         let rewardScoreValue = "";
         for (let [id,score] of rankRewards.reverse()){
-            console.log(id);
-            console.log(score);
             rewardFieldValue += `<@&${id}>\n`;
             rewardScoreValue += `${score}\n`;
         }
@@ -317,10 +315,10 @@ function editEmbed(embed, i) {
                                     buttonDaily, buttonStats, buttonName
                                 );
 
-                            fetchedMsg.edit({ embeds: [embed], components: [row] });
+                            fetchedMsg.edit({ embeds: [embed], components: [row] }).then(_ => console.log(`Updated usercard`)).catch(console.error);
                         }
                         else {
-                            fetchedMsg.edit({ embeds: [embed], components: [] });
+                            fetchedMsg.edit({ embeds: [embed], components: [] }).then(_ => console.log(`Updated rewards preview`)).catch(console.error);
                         }
                     }
                     //If message is deleted
