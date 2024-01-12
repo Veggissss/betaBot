@@ -16,7 +16,7 @@ jobs:
     - uses: actions/checkout@v3
     - name: Build the Docker image
       run: |
-          docker build . --file Dockerfile --tag betabot:latest
+          docker build . --verbose --file Dockerfile --tag betabot:latest
           docker save betabot:latest -o betabot-image.tar
 
     - name: Archive Docker Image
