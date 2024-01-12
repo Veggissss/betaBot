@@ -26,9 +26,10 @@ jobs:
       run: |
        docker buildx create --use 
        docker buildx build --platform linux/arm/v7 -t betabot:latest .
+       docker buildx imagetools create --tag betabot:latest
     
     - name: Create TAR archive
-      run: docker save betabot:latest -o betabot-image.tar
+      run: docker save betabot:latest -o betabot.tar
 
   package:
     needs: build
